@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+
+require "qdumpfs"
+
+Qdumpfs::Command.run(ARGV)
+

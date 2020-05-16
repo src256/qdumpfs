@@ -1,0 +1,86 @@
+#! /bin/sh
+
+function mode_type {
+  ruby -e "printf %Q(%o:%s\n), File.stat(%q($1)).mode, File.ftype(%q($1))"
+}
+
+rm -rf src dest
+
+# コピー先ディレクトリdestを作成
+# dataをsrcとしてコピーしその中のfooをfoobarという名前でシンボリックリンク
+mkdir dest
+cp -rp data src
+cd src
+ln -s foo foobar
+cd ..
+
+today=`date +%Y/%m/%d`
+yesterday=`date -v -1d +%Y/%m/%d`
+
+# srcディレクトリの内容を正しくコピーできているかどうか
+../run_qdumpfs.sh src dest > tmp.log || exit 1
+../run_qdumpfs.sh src dest
+diff -r src dest/$today/src || exit 1
+
+# 更新のテスト
+mv dest/$today dest/$yesterday
+# 新しいファイルとフォルダの作成
+echo update > src/foo
+mkdir src/newdir
+echo newfile > src/newdir/newfile
+echo newfile2 > src/newfile2
+# ファイルの削除
+rm -f src/bar
+# ファイルをシンボリックリンクへ変更
+rm src/file
+cd src
+ln -s foo file
+cd ..
+# 更新実行
+../run_qdumpfs.sh src dest > tmp.log || exit 1
+# 正しくコピーできているか
+diff -r src dest/$today/src || exit 1
+
+
+unchanged=("baz/quux" "secret/secret")
+for i in "${unchanged[@]}"
+do
+    #    i1=`ls -i dest/$yesterday/src/$i`
+    #    i2=`ls -i  dest/$today/src/$i`
+    i1=`stat -f %c  dest/$yesterday/src/$i`
+    i2=`stat -f %c  dest/$today/src/$i`
+    test "$i1" = "$i2" || exit 1    
+done
+
+
+find src |sort | while read srcfile; do
+   destfile="dest/$today/$srcfile"
+   if test "`mode_type $srcfile`" != "`mode_type $destfile`"; then
+       echo "error: modes of $srcfile and $destfile differ"
+       exit 1
+   fi
+done || exit 1
+
+
+# dest2にファイルがコピーされない事を確認
+rm -rf dest2
+mkdir dest2
+
+../run_qdumpfs.sh --exclude-by-size=0 src dest > tmp.log || exit 1
+test `find dest2 -type f | wc -l` = 0 || exit 1
+
+
+rm -rf dest3
+mkdir dest3
+../run_qdumpfs.sh --exclude=foo --exclude bar src dest3 > tmp.log || exit 1
+test -z "`find dest3 -type f | egrep 'foo|bar'`" || exit 1
+
+rm -rf dest4
+mkdir dest4
+../run_qdumpfs.sh --exclude-by-glob='new*' src dest4 > tmp.log || exit 1
+test -z "`find dest4 -type f | egrep new`" || exit 1
+
+rm -rf src dest dest?
+
+echo ok.
+exit 0
