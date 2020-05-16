@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = %q{qdumpfs}
   spec.description   = %q{qdumpfs}
-  spec.homepage      = "https://srcw.net"
+  spec.homepage      = "https://github.com/src256/qdumpfs"
   spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
