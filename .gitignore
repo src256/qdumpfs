@@ -11,4 +11,5 @@ list*
 log.txt
 *test.cmd
 test*.cmd
+*.log
 
