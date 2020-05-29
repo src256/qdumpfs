@@ -19,8 +19,8 @@ module Qdumpfs
       opts = {}
       opt = OptionParser.new(argv)
       opt.version = VERSION
-      opt.banner = "Usage: #{opt.program_name} [-h|--help]"
-      opt.separator('')
+      opt.banner = "Usage: #{opt.program_name} [options] <source> <dest>"
+      opt.separator('Options')
       opt.on_head('-h', '--help', 'show this message') do |v|
         puts opt.help
         exit
@@ -46,12 +46,9 @@ module Qdumpfs
       begin
         command = Command.new(option)
         command.run
-      rescue ArgumentError => e
-        puts e.message, e.backtrace
-        puts opt.help
-        exit
       rescue => e
-        puts e.message, e.backtrace
+        puts opt.help
+        exit        
       end
     end
     
