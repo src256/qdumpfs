@@ -34,7 +34,7 @@ module Qdumpfs
       }
       opt.on('-s SIZE', '--exclude-by-size=SIZE', 'exclude files larger than SIZE') {|v| opts[:es] = v }
       opt.on('-w GLOB', '--exclude-by-glob=GLOB', 'exclude files matching GLOB') {|v| opts[:ep] = v }
-      commands = ['backup', 'sync', 'list', 'expire', 'verify', 'test']
+      commands = ['backup', 'sync', 'list', 'expire', 'verify']
       opt.on('-c COMMAND', '--command=COMMAND', commands, commands.join('|')) {|v| opts[:c] = v}
       opt.on('-l HOURS', '--limit=HOURS', 'limit hours') {|v| opts[:limit] = v}
       opt.on('-k KEEPARG', '--keep=KEEPARG', 'ex: --keep 100Y12M12W30D (100years, 12months, 12weeks, 30days, default)') {|v| opts[:keep] = v}
@@ -67,9 +67,9 @@ module Qdumpfs
         expire
       elsif @opt.cmd == 'verify'
         verify
-      elsif @opt.cmd == 'test'
-        test
-      else
+#      elsif @opt.cmd == 'test'
+#        test
+#      else
         raise RuntimeError, "unknown command: #{cmd}"
       end
     end
@@ -391,15 +391,7 @@ module Qdumpfs
       diff = time_diff(start_time, end_time)
       log("##### sync end #{fmt(end_time)} diff=#{diff} last_sync_complete=#{last_sync_complete} #####")
     end
-    
-    def open_verify_file
-      filename = File.join(@log_dir, 'verify.txt')
-      if FileTest.file?(filename)
-        File.unlink(filename)
-      end
-      File.open(filename, 'a')
-    end
-    
+      
     def verify
       file = @opt.open_verifyfile
     

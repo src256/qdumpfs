@@ -109,7 +109,7 @@ module Qdumpfs
       @cmd = @opts[:c] || 'backup'
       
       #      @logger = NullLogger.new
-      logfile = @opts[:logfile] || 'log.txt'
+      logfile = @opts[:logfile] || 'qdumpfs.log'
       #ログディレクトリの作成      
       @logdir = File.expand_path('.')
       Dir.mkdir(@logdir) unless FileTest.directory?(@logdir)
