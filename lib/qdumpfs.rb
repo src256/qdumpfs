@@ -38,11 +38,16 @@ module Qdumpfs
       opt.on('-c COMMAND', '--command=COMMAND', commands, commands.join('|')) {|v| opts[:c] = v}
       opt.on('-l HOURS', '--limit=HOURS', 'limit hours') {|v| opts[:limit] = v}
       opt.on('-k KEEPARG', '--keep=KEEPARG', 'ex: --keep 100Y12M12W30D (100years, 12months, 12weeks, 30days, default)') {|v| opts[:keep] = v}
-
-
+      opt.on('--logdir LOGDIR', 'logdir') {|v| opts[:logdir] = v}
       opt.parse!(argv)
       option = Option.new(opts, ARGV)
-      
+      if opts[:v]
+        puts "<<<<< qdumpfs options >>>>> "
+        puts "logdir: #{option.logdir}"
+        puts "logpath: #{option.logpath}"
+        puts "verifypath: #{option.verifypath}"
+        puts 
+      end
       begin
         command = Command.new(option)
         command.run

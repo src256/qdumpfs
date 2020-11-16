@@ -109,9 +109,9 @@ module Qdumpfs
       @cmd = @opts[:c] || 'backup'
       
       #      @logger = NullLogger.new
-      logfile = @opts[:logfile] || 'qdumpfs.log'
+      logfile = 'qdumpfs.log'
       #ログディレクトリの作成      
-      @logdir = File.expand_path('.')
+      @logdir = @opts[:logdir] || Dir.pwd
       Dir.mkdir(@logdir) unless FileTest.directory?(@logdir)
       @logpath = File.join(@logdir, logfile)
       @logger = SimpleLogger.new(@logpath)
@@ -143,7 +143,7 @@ module Qdumpfs
     end
     attr_reader :dirs, :src, :dst, :cmd
     attr_reader :keep_year, :keep_month, :keep_week, :keep_day
-    attr_reader :logdir, :logfile, :verifyfile
+    attr_reader :logdir, :logpath, :verifypath
     attr_reader :logger, :matcher, :reporter, :interval_proc
     
     def report(type, filename)
