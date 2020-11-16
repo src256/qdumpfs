@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    qdumpfs (0.4.0)
+    qdumpfs (0.5.0)
 
 GEM
   remote: https://rubygems.org/
