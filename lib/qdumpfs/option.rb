@@ -162,7 +162,9 @@ module Qdumpfs
       else
         # 何も指定されていない場合
         if type == 'new_file'
-          msg = format_report(type, filename)
+          stat = File.stat(filename)
+          size = stat.size
+          msg = format_report(type, filename, size)
         end
       end
       log(msg)
@@ -227,8 +229,8 @@ module Qdumpfs
     end
         
     private
-    def format_report(type, filename)
-      sprintf("%-12s %s\n", type, filename)
+    def format_report(type, filename, size)
+      sprintf("%s\t%s\t%d\n", type, filename, size)
     end
     
     def format_report_with_size(type, filename, size, format_size)
