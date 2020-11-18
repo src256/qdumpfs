@@ -34,11 +34,17 @@ module Qdumpfs
       }
       opt.on('-s SIZE', '--exclude-by-size=SIZE', 'exclude files larger than SIZE') {|v| opts[:es] = v }
       opt.on('-w GLOB', '--exclude-by-glob=GLOB', 'exclude files matching GLOB') {|v| opts[:ep] = v }
-      commands = ['backup', 'sync', 'list', 'expire', 'verify']
+      commands = ['backup', 'sync', 'list', 'expire', 'verify', 'delete']
       opt.on('-c COMMAND', '--command=COMMAND', commands, commands.join('|')) {|v| opts[:c] = v}
       opt.on('-l HOURS', '--limit=HOURS', 'limit hours') {|v| opts[:limit] = v}
       opt.on('-k KEEPARG', '--keep=KEEPARG', 'ex: --keep 100Y12M12W30D (100years, 12months, 12weeks, 30days, default)') {|v| opts[:keep] = v}
       opt.on('--logdir LOGDIR', 'logdir') {|v| opts[:logdir] = v}
+      opt.on('--delete-from YYYYMMDD', 'delete backup from YYYY/MM/DD') {|v|
+        opts[:delete_from] = Date.parse(v)
+      }
+      opt.on('--delete-to YYYYMMDD', 'delete backup to YYYY/MM/DD') {|v|
+        opts[:delete_to] = Date.parse(v)
+      } 
       opt.parse!(argv)
       option = Option.new(opts, ARGV)
       if opts[:v]
@@ -52,6 +58,8 @@ module Qdumpfs
         command = Command.new(option)
         command.run
       rescue => e
+#        p e.message
+#        p e.backtrace
         puts opt.help
         exit        
       end
@@ -69,13 +77,15 @@ module Qdumpfs
       elsif @opt.cmd == 'list'
         list
       elsif @opt.cmd == 'expire'
-        expire
+        delete('expire')
       elsif @opt.cmd == 'verify'
         verify
+      elsif @opt.cmd == 'delete'
+        delete('delete')
 #      elsif @opt.cmd == 'test'
 #        test
-#      else
-        raise RuntimeError, "unknown command: #{cmd}"
+      else
+        raise RuntimeError, "unknown command: #{@opt.cmd}"
       end
     end
     
@@ -439,40 +449,45 @@ module Qdumpfs
       file.close 
     end
     
-    def expire
+    def delete(cmd)
       @opt.validate_directories(1)
       
       start_time = Time.now
       limit_time = start_time + (@opt.limit_sec)
-      log("##### expire start #{fmt(start_time)} => limit_time=#{fmt(limit_time)} #####")
+      log("##### #{cmd} start #{fmt(start_time)} => limit_time=#{fmt(limit_time)} #####")
       
       @opt.dirs.each do |target_dir|
         
         target_start = Time.now        
-        expire_target_dir(target_dir)
+        delete_target_dir(cmd, target_dir)
         target_end = Time.now
         
         # 次回expireにかかる時間を最終expire時間の半分と予想
         next_expire = (target_end - target_start) / 2
         
         cur_time = Time.now
-        in_imit = (cur_time + next_expire) < limit_time
+        in_limit = (cur_time + next_expire) < limit_time
         
         log("## cur_time=#{fmt(cur_time)} + next_expire=#{next_expire} <  limit_time=#{fmt(limit_time)} in_limit=#{in_limit} ## ")
         unless in_limit
           break
         end
       end
-      
-      log("##### expire end #####")
+      log("##### #{cmd} end #####")
     end
-    
-    def expire_target_dir(target_dir)
+
+    def delete_target_dir(cmd, target_dir)
       target_dir = to_unix_path(target_dir)
       puts "<<<<< Target dir: #{target_dir} >>>>>"
       
       snapshots = BackupDir.scan_backup_dirs(target_dir)
-      @opt.detect_keep_dirs(snapshots)
+      if cmd == 'expire'
+        @opt.detect_expire_dirs(snapshots)
+      elsif cmd == 'delete'
+        @opt.detect_delete_dirs(snapshots, @opt.delete_from, @opt.delete_to) 
+      else
+        raise RuntimeError, "unknown command: #{cmd}"
+      end
       
 #      p @opt.keep_year
 #      p @opt.keep_month
@@ -527,8 +542,64 @@ module Qdumpfs
       puts "Keep dirs:"
       snapshots.each do |snapshot|
         puts snapshot.path if snapshot.keep
-      end
-      
+      end      
     end
+
+    # def delete
+    #   @opt.validate_directories(1)
+      
+    #   start_time = Time.now
+    #   limit_time = start_time + (@opt.limit_sec)      
+    #   log("##### delete start #{fmt(start_time)} => limit_time=#{fmt(limit_time)} #####")
+    #   @opt.dirs.each do |target_dir|
+    #     target_start = Time.now
+    #     delete_target_dir(target_dir)
+    #     target_end = Time.now
+        
+    #     # 次回expireにかかる時間を最終expire時間の半分と予想
+    #     next_expire = (target_end - target_start) / 2
+        
+    #     cur_time = Time.now
+    #     in_imit = (cur_time + next_expire) < limit_time
+        
+    #     log("## cur_time=#{fmt(cur_time)} + next_expire=#{next_expire} <  limit_time=#{fmt(limit_time)} in_limit=#{in_limit} ## ")
+    #     unless in_limit
+    #       break
+    #     end
+    #   end        
+    #   log("##### delete end #####")
+    # end
+
+    # def delete_target_dir(target_dir)
+    #   target_dir = to_unix_path(target_dir)
+    #   puts "<<<<< Target dir: #{target_dir} >>>>>"
+      
+    #   snapshots = BackupDir.scan_backup_dirs(target_dir)
+    #   @opt.detect_delete_dirs(snapshots)
+
+    #   snapshots.each do |snapshot|
+    #     next if snapshot.keep
+    #     t_start = Time.now
+    #     print "Deleting #{snapshot.path} ..."
+       
+    #     unless @opt.dry_run
+    #       if windows?
+    #         # Windowsの場合
+    #         win_backup_path = to_win_path(snapshot.path)
+    #         system("rmdir /S /Q #{win_backup_path}")
+    #       else
+    #         # Linux/macOSの場合
+    #         system("rm -rf #{snapshot.path}")
+    #       end
+    #     end
+    #   end
+
+    #   t_end = Time.now
+    #   diff = (t_end - t_start).to_i
+    #   diff_hours = diff / 3600
+    #   puts " done[#{diff} seconds = #{diff_hours} hours]." 
+    # end
+    
   end
+
 end

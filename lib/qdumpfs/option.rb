@@ -139,12 +139,15 @@ module Qdumpfs
       @keep_month = $1.to_i if keep =~ /(\d+)M/
       @keep_week = $1.to_i if keep =~ /(\d+)W/
       @keep_day = $1.to_i if keep =~ /(\d+)D/
+      @delete_from = @opts[:delete_from]
+      @delete_to = @opts[:delete_to]      
       @today = Date.today
     end
     attr_reader :dirs, :src, :dst, :cmd
     attr_reader :keep_year, :keep_month, :keep_week, :keep_day
     attr_reader :logdir, :logpath, :verifypath
     attr_reader :logger, :matcher, :reporter, :interval_proc
+    attr_reader :delete_from, :delete_to
     
     def report(type, filename)
       if @opts[:v]
@@ -206,11 +209,24 @@ module Qdumpfs
       end
     end
     
-    def detect_keep_dirs(backup_dirs)
+    def detect_expire_dirs(backup_dirs)
       detect_year_keep_dirs(backup_dirs)
       detect_month_keep_dirs(backup_dirs)
       detect_week_keep_dirs(backup_dirs)
       detect_day_keep_dirs(backup_dirs)
+    end
+
+    def detect_delete_dirs(backup_dirs, delete_from, delete_to)
+      backup_dirs.each do |backup_dir|
+        backup_dir.keep = true
+        if delete_from && backup_dir.date >= delete_from && delete_to && backup_dir.date <= delete_to
+          backup_dir.keep = false
+        elsif delete_from && backup_dir.date >= delete_from
+          backup_dir.keep = false
+        elsif delete_to && backup_dir.date <= delete_to
+          backup_dir.keep = false
+        end
+      end
     end
     
     def open_verifyfile
