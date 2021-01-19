@@ -1,3 +1,4 @@
+# coding: utf-8
 def wprintf(format, *args)
   STDERR.printf("pdumpfs: " + format + "\n", *args)
 end
@@ -278,6 +279,10 @@ module QdumpfsUtils
   
   def to_unix_path(path)
     path.gsub(/\\/, '/')
-  end  
+  end
+
+  def to_time(date)
+    Time.local(date.year, date.month, date.day)
+  end
 end
 

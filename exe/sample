@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+
+require 'fileutils'
+require "qdumpfs"
+
+from = "./data/from"
+to = "./data/to"
+to2 = "./data/to2"
+
+def create_dir(dir)
+  if FileTest.directory?(dir)
+    FileUtils.rm_rf(dir)
+  end
+  FileUtils.mkpath(dir)
+end
+
+create_dir(to)
+create_dir(to2)
+
+
+arg = ["--backup-at=20210119", from, to]
+Qdumpfs::Command.run(arg)
+arg = ["--backup-at=20210121", from, to]
+Qdumpfs::Command.run(arg)
+arg = ["--backup-at=20210122", from, to]
+Qdumpfs::Command.run(arg)
+arg = ["--backup-at=20210123", from, to]
+Qdumpfs::Command.run(arg)
+arg = ["--backup-at=20210124", from, to]
+Qdumpfs::Command.run(arg)
+
+
+arg = ["--backup-at=20210122", from, to2]
+Qdumpfs::Command.run(arg)
+arg = ["--backup-at=20210123", from, to2]
+
+arg = ["--command=delete", "--delete-from=20210122", "--delete-to=20210123", "--limit=1", to, to2]
+Qdumpfs::Command.run(arg)
+
+

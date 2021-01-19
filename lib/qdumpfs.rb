@@ -38,15 +38,18 @@ module Qdumpfs
       opt.on('-c COMMAND', '--command=COMMAND', commands, commands.join('|')) {|v| opts[:c] = v}
       opt.on('-l HOURS', '--limit=HOURS', 'limit hours') {|v| opts[:limit] = v}
       opt.on('-k KEEPARG', '--keep=KEEPARG', 'ex: --keep 100Y12M12W30D (100years, 12months, 12weeks, 30days, default)') {|v| opts[:keep] = v}
-      opt.on('--logdir LOGDIR', 'logdir') {|v| opts[:logdir] = v}
-      opt.on('--delete-from YYYYMMDD', 'delete backup from YYYY/MM/DD') {|v|
+      opt.on('--logdir=LOGDIR', 'logdir') {|v| opts[:logdir] = v}
+      opt.on('--delete-from=YYYYMMDD', 'delete backup from YYYY/MM/DD') {|v|
         opts[:delete_from] = Date.parse(v)
       }
-      opt.on('--delete-to YYYYMMDD', 'delete backup to YYYY/MM/DD') {|v|
+      opt.on('--delete-to=YYYYMMDD', 'delete backup to YYYY/MM/DD') {|v|
         opts[:delete_to] = Date.parse(v)
-      } 
+      }
+      opt.on('--backup-at=YYYYMMDD', 'backup at YYYY/MM/DD') {|v|
+        opts[:backup_at] = Date.parse(v)
+      }
       opt.parse!(argv)
-      option = Option.new(opts, ARGV)
+      option = Option.new(opts, argv)
       if opts[:v]
         puts "<<<<< qdumpfs options >>>>> "
         puts "logdir: #{option.logdir}"
@@ -146,28 +149,28 @@ module Qdumpfs
       return src_count, dst_count
     end
 
-    def get_snapshots(target_dir)
-      # 指定したディレクトリに含まれるバックアップフォルダ(日付つき)を全て取得
-      dd   = "[0-9][0-9]"
-      dddd = dd + dd
-      # FIXME: Y10K problem.
-      dirs = []
-      glob_path = File.join(target_dir, dddd, dd, dd)
-      Dir.glob(glob_path).sort.find {|dir|
-        day, month, year = File.split_all(dir).reverse.map {|x| x.to_i }
-        path = dir
-        if File.directory?(path) and Date.valid_date?(year, month, day) and
-          dirs << path
-        end
-      }
-      dirs
-    end
+#    def get_snapshots(target_dir)
+#      # 指定したディレクトリに含まれるバックアップフォルダ(日付つき)を全て取得
+#      dd   = "[0-9][0-9]"
+#      dddd = dd + dd
+#      # FIXME: Y10K problem.
+#      dirs = []
+#      glob_path = File.join(target_dir, dddd, dd, dd)
+#      Dir.glob(glob_path).sort.find {|dir|
+#        day, month, year = File.split_all(dir).reverse.map {|x| x.to_i }
+#        path = diro
+#        if File.directory?(path) and Date.valid_date?(year, month, day) and
+#          dirs << path
+#        end
+#      }
+#      dirs
+#    end
 
-    def get_snapshot_date(snapshot)
-      # バックアップディレクトリのパス(日付つき)から日付を取得して返す
-      day, month, year = File.split_all(snapshot).reverse.map {|x| x.to_i }
-      Time.new(year, month, day)
-    end
+#    def get_snapshot_date(snapshot)
+#      # バックアップディレクトリのパス(日付つき)から日付を取得して返す
+#      day, month, year = File.split_all(snapshot).reverse.map {|x| x.to_i }
+#      Time.new(year, month, day)
+#    end
     
     def update_snapshot(src, latest, today)
       # バックアップの差分コピーを実行
@@ -306,6 +309,9 @@ module Qdumpfs
       
       @written_bytes = 0
       start_time = Time.now
+      if @opt.backup_at
+        start_time = to_time(@opt.backup_at)
+      end
       src = @opt.src
       dst = @opt.dst
       
@@ -453,9 +459,9 @@ module Qdumpfs
       @opt.validate_directories(1)
       
       start_time = Time.now
+p @opt.limit_sec      
       limit_time = start_time + (@opt.limit_sec)
-      log("##### #{cmd} start #{fmt(start_time)} => limit_time=#{fmt(limit_time)} #####")
-      
+      log("##### #{cmd} delete-from=#{@opt.delete_from} delete-to=#{@opt.delete_to} start #{fmt(start_time)} => limit_time=#{fmt(limit_time)} #####")
       @opt.dirs.each do |target_dir|
         
         target_start = Time.now        

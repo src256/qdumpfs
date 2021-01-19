@@ -12,4 +12,7 @@ log.txt
 *test.cmd
 test*.cmd
 *.log
+/data/to
+/data/to2
+
 

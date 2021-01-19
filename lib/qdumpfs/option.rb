@@ -140,14 +140,15 @@ module Qdumpfs
       @keep_week = $1.to_i if keep =~ /(\d+)W/
       @keep_day = $1.to_i if keep =~ /(\d+)D/
       @delete_from = @opts[:delete_from]
-      @delete_to = @opts[:delete_to]      
+      @delete_to = @opts[:delete_to]
+      @backup_at = @opts[:backup_at]
       @today = Date.today
     end
     attr_reader :dirs, :src, :dst, :cmd
     attr_reader :keep_year, :keep_month, :keep_week, :keep_day
     attr_reader :logdir, :logpath, :verifypath
     attr_reader :logger, :matcher, :reporter, :interval_proc
-    attr_reader :delete_from, :delete_to
+    attr_reader :delete_from, :delete_to, :backup_at
     
     def report(type, filename)
       if @opts[:v]
@@ -217,14 +218,21 @@ module Qdumpfs
     end
 
     def detect_delete_dirs(backup_dirs, delete_from, delete_to)
+      
       backup_dirs.each do |backup_dir|
         backup_dir.keep = true
-        if delete_from && backup_dir.date >= delete_from && delete_to && backup_dir.date <= delete_to
-          backup_dir.keep = false
-        elsif delete_from && backup_dir.date >= delete_from
-          backup_dir.keep = false
-        elsif delete_to && backup_dir.date <= delete_to
-          backup_dir.keep = false
+        if delete_from && delete_to
+          if backup_dir.date >= delete_from && backup_dir.date <= delete_to
+            backup_dir.keep = false
+          end
+        elsif delete_from
+          if backup_dir.date >= delete_from
+            backup_dir.keep = false
+          end
+        elsif delete_to
+          if backup_dir.date <= delete_to
+            backup_dir.keep = false
+          end
         end
       end
     end
