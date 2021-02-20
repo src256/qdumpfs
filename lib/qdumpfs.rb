@@ -10,6 +10,7 @@ require 'fileutils'
 
 
 module Qdumpfs
+  VERSION = "0.8.0"  
  
   class Command
     include QdumpfsUtils
@@ -45,6 +46,9 @@ module Qdumpfs
       opt.on('--delete-to=YYYYMMDD', 'delete backup to YYYY/MM/DD') {|v|
         opts[:delete_to] = Date.parse(v)
       }
+      opt.on('--delete-dir=DIRS', 'relative path from the snapshot root of the backup. ex: --delete-dir=foo,home/bar') {|v|
+        opts[:delete_dirs] = v.split(/,/)
+      }      
       opt.on('--backup-at=YYYYMMDD', 'backup at YYYY/MM/DD') {|v|
         opts[:backup_at] = Date.parse(v)
       }
@@ -85,8 +89,6 @@ module Qdumpfs
         verify
       elsif @opt.cmd == 'delete'
         delete('delete')
-#      elsif @opt.cmd == 'test'
-#        test
       else
         raise RuntimeError, "unknown command: #{@opt.cmd}"
       end
@@ -149,29 +151,6 @@ module Qdumpfs
       return src_count, dst_count
     end
 
-#    def get_snapshots(target_dir)
-#      # 指定したディレクトリに含まれるバックアップフォルダ(日付つき)を全て取得
-#      dd   = "[0-9][0-9]"
-#      dddd = dd + dd
-#      # FIXME: Y10K problem.
-#      dirs = []
-#      glob_path = File.join(target_dir, dddd, dd, dd)
-#      Dir.glob(glob_path).sort.find {|dir|
-#        day, month, year = File.split_all(dir).reverse.map {|x| x.to_i }
-#        path = diro
-#        if File.directory?(path) and Date.valid_date?(year, month, day) and
-#          dirs << path
-#        end
-#      }
-#      dirs
-#    end
-
-#    def get_snapshot_date(snapshot)
-#      # バックアップディレクトリのパス(日付つき)から日付を取得して返す
-#      day, month, year = File.split_all(snapshot).reverse.map {|x| x.to_i }
-#      Time.new(year, month, day)
-#    end
-    
     def update_snapshot(src, latest, today)
       # バックアップの差分コピーを実行
       # src: コピー元ディレクトリ ex) i:/from/home
@@ -482,6 +461,29 @@ p @opt.limit_sec
       log("##### #{cmd} end #####")
     end
 
+    def rm_dir(path)
+      can_delete = true
+      if @opt.dry_run
+        can_delete = false
+      elsif !FileTest.directory?(path)
+        can_delete = false
+      end
+      msg = can_delete ? "...ok..." : "...ng..."
+      print "Deleting #{path} #{msg}"
+
+      return unless can_delete
+
+      #それ以外は日付バックアップディレクトリ全体を削除
+      if windows?
+        # Windowsの場合
+        win_backup_path = to_win_path(path)
+        system("rmdir /S /Q #{win_backup_path}")
+      else
+        # Linux/macOSの場合
+        system("rm -rf #{path}")
+      end
+    end
+
     def delete_target_dir(cmd, target_dir)
       target_dir = to_unix_path(target_dir)
       puts "<<<<< Target dir: #{target_dir} >>>>>"
@@ -494,40 +496,20 @@ p @opt.limit_sec
       else
         raise RuntimeError, "unknown command: #{cmd}"
       end
-      
-#      p @opt.keep_year
-#      p @opt.keep_month
-#      p @opt.keep_day
-      
+    
       snapshots.each do |snapshot|
         next if snapshot.keep
         t_start = Time.now
-        print "Deleting #{snapshot.path} ..."
-       
-        unless @opt.dry_run
-          #http://superuser.com/questions/19762/mass-deleting-files-in-windows/289399#289399
-          ##### here
-          #bundle exec ruby exe/qdumpfs --dry-run --keep=100Y36M30W30D --command expire f:/pc1/pdumpfs/users f:/pc1/pdumpfs/opt f:/pc1/pdumpfs/d
-          
-          if windows?
-            # Windowsの場合
-            win_backup_path = to_win_path(snapshot.path)
-            
-#            byenow = "byenow"
-#            if which(byenow)
-#              print " bynow"
-#              system("byenow -y --delete-ntapi --one-liner #{snapshot.path}")
-#            else
-#              print " pass1"
-#              system("del /F /S /Q #{win_backup_path} > nul")
-#              print " pass2"
-#              system("rmdir /S /Q #{win_backup_path}")
-            #            end
-            system("rmdir /S /Q #{win_backup_path}")
-          else
-            # Linux/macOSの場合
-            system("rm -rf #{snapshot.path}")
+
+        if @opt.delete_dirs.size > 0
+          #削除するディレクトリが指定されている場合日付バックアップディレクトリの下そのディレクトリを削除
+          @opt.delete_dirs.each do |delete_dir|
+            delete_path = File.join(snapshot.path, delete_dir)
+            rm_dir(delete_path)
           end
+        else
+          #それ以外はバックアップディレクトリ全体が対象
+          rm_dir(snapshot.path)
         end
         
         t_end = Time.now
@@ -551,60 +533,6 @@ p @opt.limit_sec
       end      
     end
 
-    # def delete
-    #   @opt.validate_directories(1)
-      
-    #   start_time = Time.now
-    #   limit_time = start_time + (@opt.limit_sec)      
-    #   log("##### delete start #{fmt(start_time)} => limit_time=#{fmt(limit_time)} #####")
-    #   @opt.dirs.each do |target_dir|
-    #     target_start = Time.now
-    #     delete_target_dir(target_dir)
-    #     target_end = Time.now
-        
-    #     # 次回expireにかかる時間を最終expire時間の半分と予想
-    #     next_expire = (target_end - target_start) / 2
-        
-    #     cur_time = Time.now
-    #     in_imit = (cur_time + next_expire) < limit_time
-        
-    #     log("## cur_time=#{fmt(cur_time)} + next_expire=#{next_expire} <  limit_time=#{fmt(limit_time)} in_limit=#{in_limit} ## ")
-    #     unless in_limit
-    #       break
-    #     end
-    #   end        
-    #   log("##### delete end #####")
-    # end
-
-    # def delete_target_dir(target_dir)
-    #   target_dir = to_unix_path(target_dir)
-    #   puts "<<<<< Target dir: #{target_dir} >>>>>"
-      
-    #   snapshots = BackupDir.scan_backup_dirs(target_dir)
-    #   @opt.detect_delete_dirs(snapshots)
-
-    #   snapshots.each do |snapshot|
-    #     next if snapshot.keep
-    #     t_start = Time.now
-    #     print "Deleting #{snapshot.path} ..."
-       
-    #     unless @opt.dry_run
-    #       if windows?
-    #         # Windowsの場合
-    #         win_backup_path = to_win_path(snapshot.path)
-    #         system("rmdir /S /Q #{win_backup_path}")
-    #       else
-    #         # Linux/macOSの場合
-    #         system("rm -rf #{snapshot.path}")
-    #       end
-    #     end
-    #   end
-
-    #   t_end = Time.now
-    #   diff = (t_end - t_start).to_i
-    #   diff_hours = diff / 3600
-    #   puts " done[#{diff} seconds = #{diff_hours} hours]." 
-    # end
     
   end
 

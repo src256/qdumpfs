@@ -141,6 +141,7 @@ module Qdumpfs
       @keep_day = $1.to_i if keep =~ /(\d+)D/
       @delete_from = @opts[:delete_from]
       @delete_to = @opts[:delete_to]
+      @delete_dirs = @opts[:delete_dirs]
       @backup_at = @opts[:backup_at]
       @today = Date.today
     end
@@ -148,7 +149,7 @@ module Qdumpfs
     attr_reader :keep_year, :keep_month, :keep_week, :keep_day
     attr_reader :logdir, :logpath, :verifypath
     attr_reader :logger, :matcher, :reporter, :interval_proc
-    attr_reader :delete_from, :delete_to, :backup_at
+    attr_reader :delete_from, :delete_to, :delete_dirs, :backup_at
     
     def report(type, filename)
       if @opts[:v]

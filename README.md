@@ -1,13 +1,14 @@
 # Qdumpfs
 
-qdumpfs is a modified version of pdumpfs.
+pdumpfsの個人的改良版です。
 
-## Installation
+Gem化して最近のバージョンのバージョンのRubyに対応。コマンドの拡張などを行っています。
+
+## インストール
 
 gem install qdumpfs
 
-## Usage
-
+## 使用方法
 
 ```
 Usage: qdumpfs [options] <source> <dest>
@@ -24,43 +25,48 @@ Options
     -k, --keep=KEEPARG               ex: --keep 100Y12M12W30D (100years, 12months, 12weeks, 30days, default)
 ```
 
-## Example
+## 実行例
 
-Backup your home directory, run the following command.
+
+バックアップを実行する場合。
+
 ```
 qdumpfs /home/foo /backup
 ```
 
-You can specify command option(default is "backup").
+"--command backup"オプションを明示することもできます。
+
 ```
 qdumpfs --command=backup /home/foo /backup
 ```
 
-Sync two backup directories.
+"--command sync"でバックアップフォルダを同期できます。
 ```
 qdumpfs --command=sync /backup1 /backup2
 ```
 
-Sync two backup directories(limit 1 hours, keep 100Y12M12W30D).
+バックアップフォルダの同期には膨大な時間が必要な場合があるため、実行時間を制限できます。以下は例えば1時間に制限する場合です。
 ```
 qdumpfs --command=sync --limit=1 /backup1 /backup2
 ```
 
-Sync two backup directories(limit 1 hours, keep specified backups only).
+バックアップフォルダの同期で、1時間でかつ"100Y12M12W30D"を保存する場合のオプションです。
 ```
-qdumpfs --command=sync --limit=1 --keep=5Y6M7W10D --keep/backup1 /backup2
-```
-
-Expire backup directory.
-```
-qdumpfs --command=expire --limit=1 --keep=5Y6M7W10D --keep/backup1 /backup2
+qdumpfs --command=sync --limit=1 --keep=5Y6M7W10D backup1 /backup2
 ```
 
+"--command expire"で、"--keep="パターンに該当しないバックアップを削除できます。
+```
+qdumpfs --command=expire --limit=1 --keep=5Y6M7W10D backup1 /backup2
+```
+
+"--command erase"で、バックアップに存在する指定したパスを削除できます(間違えてバックアップした内容を削除したい場合などに使用)。
+```
+qdumpfs --command=erase --limit=1 backup1 /backup2
+```
 
 ## License
 
 qdumpfs is a free software with ABSOLUTELY NO WARRANTY under the terms of the GNU General Public License version 2.
-
-
 
 
