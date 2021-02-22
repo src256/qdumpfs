@@ -10,7 +10,6 @@ require 'fileutils'
 
 
 module Qdumpfs
-  VERSION = "0.8.0"  
  
   class Command
     include QdumpfsUtils
@@ -436,9 +435,7 @@ module Qdumpfs
     
     def delete(cmd)
       @opt.validate_directories(1)
-      
       start_time = Time.now
-p @opt.limit_sec      
       limit_time = start_time + (@opt.limit_sec)
       log("##### #{cmd} delete-from=#{@opt.delete_from} delete-to=#{@opt.delete_to} start #{fmt(start_time)} => limit_time=#{fmt(limit_time)} #####")
       @opt.dirs.each do |target_dir|
