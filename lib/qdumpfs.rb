@@ -51,6 +51,7 @@ module Qdumpfs
       opt.on('--backup-at=YYYYMMDD', 'backup at YYYY/MM/DD') {|v|
         opts[:backup_at] = Date.parse(v)
       }
+      opt.on('-d', '--debug', 'debug mode') {|v| opts[:d] = v }
       opt.parse!(argv)
       option = Option.new(opts, argv)
       if opts[:v]
@@ -64,8 +65,10 @@ module Qdumpfs
         command = Command.new(option)
         command.run
       rescue => e
-#        p e.message
-#        p e.backtrace
+        if option.debug
+          p e.message
+          p e.backtrace
+        end
         puts opt.help
         exit        
       end
@@ -170,7 +173,7 @@ module Qdumpfs
           # ファイルのアップデート
           update_file(s, l, t)
           dirs[t] = File.stat(s) if File.ftype(s) == "directory"
-        rescue Errno::ENOENT, Errno::EACCES => e
+        rescue => e
           wprintf("%s: %s", src, e.message)
           next
         end
@@ -205,7 +208,7 @@ module Qdumpfs
         end
           chown_if_root(type, s, t)
           dirs[t] = File.stat(s) if File.ftype(s) == "directory"
-        rescue Errno::ENOENT, Errno::EACCES => e
+        rescue => e
           wprintf("%s: %s", s, e.message)
           next
         end

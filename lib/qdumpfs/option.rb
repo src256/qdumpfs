@@ -144,12 +144,14 @@ module Qdumpfs
       @delete_dirs = @opts[:delete_dirs]
       @backup_at = @opts[:backup_at]
       @today = Date.today
+      @debug = @opts[:d]
     end
     attr_reader :dirs, :src, :dst, :cmd
     attr_reader :keep_year, :keep_month, :keep_week, :keep_day
     attr_reader :logdir, :logpath, :verifypath
     attr_reader :logger, :matcher, :reporter, :interval_proc
     attr_reader :delete_from, :delete_to, :delete_dirs, :backup_at
+    attr_reader :debug
     
     def report(type, filename)
       if @opts[:v]

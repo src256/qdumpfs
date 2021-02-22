@@ -73,14 +73,14 @@ module QdumpfsFind
         yield file.dup.taint
         begin
           s = File.lstat(file)
-        rescue Errno::ENOENT, Errno::EACCES, Errno::ENOTDIR, Errno::ELOOP, Errno::ENAMETOOLONG => e
+        rescue => e
           logger.print("File.lstat path=#{file} error=#{e.message}")
           next
         end
         if s.directory? then
           begin
             fs = Dir.entries(file, :encoding=>'UTF-8')
-          rescue Errno::ENOENT, Errno::EACCES, Errno::ENOTDIR, Errno::ELOOP, Errno::ENAMETOOLONG => e
+          rescue => e
             logger.print("Dir.entries path=#{file} error=#{e.message}")
             next
           end
@@ -107,23 +107,22 @@ module QdumpfsUtils
 
   # We don't use File.copy for calling @interval_proc.
   def copy_file(src, dest)
-    File.open(src, 'rb') {|r|
-      File.open(dest, 'wb') {|w|
-        block_size = (r.stat.blksize or 8192)
-        begin
+    begin    
+      File.open(src, 'rb') {|r|
+        File.open(dest, 'wb') {|w|
+          block_size = (r.stat.blksize or 8192)
           i = 0
           while true
             block = r.sysread(block_size)
             w.syswrite(block)
             i += 1
             @written_bytes += block.size
-#            @interval_proc.call if i % 10 == 0
           end
-        rescue EOFError => e
-          #            puts e.message, e.backtrace
-        end
+        }
       }
-    }
+    rescue EOFError => e
+      # puts e.message, e.backtrace
+    end    
     unless FileTest.file?(dest)
       raise "copy_file fails #{dest}"
     end
