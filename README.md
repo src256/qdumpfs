@@ -20,7 +20,7 @@ Options
     -e, --exclude=PATTERN            exclude files/directories matching PATTERN
     -s, --exclude-by-size=SIZE       exclude files larger than SIZE
     -w, --exclude-by-glob=GLOB       exclude files matching GLOB
-    -c, --command=COMMAND            backup|sync|list|expire|verify|test
+    -c, --command=COMMAND            backup|sync|list|expire|verify|delete
     -l, --limit=HOURS                limit hours
     -k, --keep=KEEPARG               ex: --keep 100Y12M12W30D (100years, 12months, 12weeks, 30days, default)
 ```
@@ -60,9 +60,9 @@ qdumpfs --command=sync --limit=1 --keep=5Y6M7W10D backup1 /backup2
 qdumpfs --command=expire --limit=1 --keep=5Y6M7W10D backup1 /backup2
 ```
 
-"--command erase"で、バックアップに存在する指定したパスを削除できます(間違えてバックアップした内容を削除したい場合などに使用)。
+"--command delete"で、バックアップに存在する指定したパスを削除できます(間違えてバックアップした内容を削除したい場合などに使用)。
 ```
-qdumpfs --command=erase --limit=1 backup1 /backup2
+qdumpfs --command=delete --delete-dir=backup1 --limit=1  r:/backup2
 ```
 
 ## License
