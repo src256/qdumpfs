@@ -141,7 +141,7 @@ module Qdumpfs
       @keep_day = $1.to_i if keep =~ /(\d+)D/
       @delete_from = @opts[:delete_from]
       @delete_to = @opts[:delete_to]
-      @delete_dirs = @opts[:delete_dirs]
+      @delete_dirs = @opts[:delete_dirs] || []
       @backup_at = @opts[:backup_at]
       @today = Date.today
       @debug = @opts[:d]
