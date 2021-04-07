@@ -137,11 +137,17 @@ module Qdumpfs
     end
     
     def filecount(dir)
-      pscmd = 'Get-ChildItem -Recurse -File | Measure-Object | %{$_.Count}'
-      cmd = "powershell -Command \"#{pscmd}\""
-      result = nil
-      Dir.chdir(dir) do
-        result = `#{cmd}`
+      result = '0'
+      if windows? 
+        pscmd = 'Get-ChildItem -Recurse -File | Measure-Object | %{$_.Count}'
+        cmd = "powershell -Command \"#{pscmd}\""
+        result = nil
+        Dir.chdir(dir) do
+          result = `#{cmd}`
+          result.chomp!
+        end
+      else
+        result = `find #{dir} | wc -l`
         result.chomp!
       end
       result.to_i
@@ -221,7 +227,7 @@ module Qdumpfs
       
       #コピー元のスナップショット
       src_snapshots = BackupDir.scan_backup_dirs(src)
-      @opt.detect_keep_dirs(src_snapshots)
+      @opt.detect_expire_dirs(src_snapshots)
       
       # コピー先の最新スナップショット
       dst_snapshots = BackupDir.scan_backup_dirs(dst)
