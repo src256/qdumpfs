@@ -180,7 +180,7 @@ module Qdumpfs
           update_file(s, l, t)
           dirs[t] = File.stat(s) if File.ftype(s) == "directory"
         rescue => e
-          log("%s: %s", src, e.message)
+          log("#{src}: #{e.message}")
           next
         end
       end
@@ -215,7 +215,7 @@ module Qdumpfs
           chown_if_root(type, s, t)
           dirs[t] = File.stat(s) if File.ftype(s) == "directory"
         rescue => e
-          log("%s: %s", src, e.message)          
+          log("#{src}: #{e.message}")
           next
         end
       end
