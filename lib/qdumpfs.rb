@@ -100,9 +100,13 @@ module Qdumpfs
     def log_result(src, today, elapsed)
       time  = Time.now.strftime("%Y-%m-%dT%H:%M:%S")
       bytes = convert_bytes(@written_bytes)
-      msg = sprintf("%s: %s -> %s (in %.2f sec, %s written)\n",
-      time, src, today, elapsed, bytes)
+      msg = sprintf("%s: %s -> %s (in %.2f sec, %s written)\n", time, src, today, elapsed, bytes)
       log(msg)
+      log("error files:\n")
+      @error_files.each_with_index do |i, filename, reason|
+        msg = "#{i}. #{filename}\t#{reason}\n"
+        log(msg)
+      end
     end
 
     def log(msg, console = true)
@@ -111,6 +115,10 @@ module Qdumpfs
 
     def report(type, file_name)
       @opt.report(type, file_name)
+    end
+
+    def report_error(file_name, reason)
+      @opt.report_error(file_name, reason)
     end
 
     def update_file(src, latest, today)
@@ -180,7 +188,8 @@ module Qdumpfs
           update_file(s, l, t)
           dirs[t] = File.stat(s) if File.ftype(s) == "directory"
         rescue => e
-          log("#{src}: #{e.message}")
+          report_error(s, e.message)
+          @error_files << [s, e.message]          
           next
         end
       end
@@ -215,7 +224,8 @@ module Qdumpfs
           chown_if_root(type, s, t)
           dirs[t] = File.stat(s) if File.ftype(s) == "directory"
         rescue => e
-          log("#{src}: #{e.message}")
+          report_error(s, e.message)
+          @error_files << [s, e.message]
           next
         end
       end
@@ -295,6 +305,7 @@ module Qdumpfs
       log("##### backup start #####")
       
       @written_bytes = 0
+      @error_files = []
       start_time = Time.now
       if @opt.backup_at
         start_time = to_time(@opt.backup_at)
@@ -351,6 +362,7 @@ module Qdumpfs
       
       start_time = Time.now
       @written_bytes = 0
+      @error_files = []
       src = @opt.src
       dst = @opt.dst
       
@@ -397,6 +409,10 @@ module Qdumpfs
       
       end_time = Time.now
       diff = time_diff(start_time, end_time)
+
+      elapsed = Time.now - start_time
+      log_result(src, dst, elapsed)
+        
       log("##### sync end #{fmt(end_time)} diff=#{diff} last_sync_complete=#{last_sync_complete} #####")
     end
       

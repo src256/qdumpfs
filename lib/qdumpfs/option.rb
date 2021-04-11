@@ -176,6 +176,11 @@ module Qdumpfs
       end
       log(msg)
     end
+
+    def report_error(filename, reason)
+      msg = sprintf("err_file\t%s\t%s\n", filename, reason)
+      log(msg)
+    end
     
     def log(msg, console = true)
       return if (msg.nil? || msg == '')
