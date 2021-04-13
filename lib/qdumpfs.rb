@@ -103,9 +103,11 @@ module Qdumpfs
       msg = sprintf("%s: %s -> %s (in %.2f sec, %s written)\n", time, src, today, elapsed, bytes)
       log(msg)
       log("error files:\n")
-      @error_files.each_with_index do |i, filename, reason|
+      i = 1
+      @error_files.each do |filename, reason|
         msg = "#{i}. #{filename}\t#{reason}\n"
         log(msg)
+        i += 1
       end
     end
 
