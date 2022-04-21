@@ -73,7 +73,9 @@ module Qdumpfs
           p e.backtrace
         end
         puts opt.help
-        exit        
+        exit
+      ensure
+        option.close
       end
     end
     

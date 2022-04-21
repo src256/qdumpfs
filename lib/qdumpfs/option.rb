@@ -152,6 +152,10 @@ module Qdumpfs
     attr_reader :logger, :matcher, :reporter, :interval_proc
     attr_reader :delete_from, :delete_to, :delete_dirs, :backup_at
     attr_reader :debug
+
+    def close
+      @logger.close
+    end
     
     def report(type, filename)
       if @opts[:v]
