@@ -33,7 +33,7 @@ module Qdumpfs
         opts[:ep] << Regexp.new(v)
       }
       opt.on('-s SIZE', '--exclude-by-size=SIZE', 'exclude files larger than SIZE') {|v| opts[:es] = v }
-      opt.on('-w GLOB', '--exclude-by-glob=GLOB', 'exclude files matching GLOB') {|v| opts[:ep] = v }
+      opt.on('-w GLOB', '--exclude-by-glob=GLOB', 'exclude files matching GLOB') {|v| opts[:eg] = v }
       commands = ['backup', 'sync', 'list', 'expire', 'verify', 'delete']
       opt.on('-c COMMAND', '--command=COMMAND', commands, commands.join('|')) {|v| opts[:c] = v}
       opt.on('-l HOURS', '--limit=HOURS', 'limit hours') {|v| opts[:limit] = v}
