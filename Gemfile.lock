@@ -1,23 +1,22 @@
 PATH
   remote: .
   specs:
-    qdumpfs (1.1.0)
+    qdumpfs (1.2.0)
 
 GEM
   remote: https://rubygems.org/
   specs:
-    minitest (5.14.4)
-    rake (13.0.3)
+    minitest (5.15.0)
+    rake (13.0.6)
 
 PLATFORMS
-  ruby
-  x64-mingw32
+  x86_64-darwin-21
 
 DEPENDENCIES
-  bundler (~> 1.17)
+  bundler (~> 2.0)
   minitest (~> 5.0)
   qdumpfs!
   rake (>= 12.3.3)
 
 BUNDLED WITH
-   1.17.2
+   2.3.8

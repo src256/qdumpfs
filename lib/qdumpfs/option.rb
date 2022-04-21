@@ -191,6 +191,10 @@ module Qdumpfs
     def dry_run
       @opts[:n]
     end
+
+    def verbose
+      @opts[:v]
+    end
     
     def limit_sec
       @limit.to_i * 3600

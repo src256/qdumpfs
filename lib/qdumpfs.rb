@@ -15,6 +15,7 @@ module Qdumpfs
     include QdumpfsUtils
     
     def self.run(argv)
+      args = argv.clone
       STDOUT.sync = true
       opts = {}
       opt = OptionParser.new(argv)
@@ -56,6 +57,8 @@ module Qdumpfs
       option = Option.new(opts, argv)
       if opts[:v]
         puts "<<<<< qdumpfs options >>>>> "
+        args = args.join(' ')
+        puts "args: #{args}"
         puts "logdir: #{option.logdir}"
         puts "logpath: #{option.logpath}"
         puts "verifypath: #{option.verifypath}"
