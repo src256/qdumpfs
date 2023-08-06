@@ -241,15 +241,15 @@ module Qdumpfs
         
     def sync_latest(src, dst, base = nil)
       # pdumpfsのバックアップフォルダを同期する
-      
+
       #コピー元のスナップショット
       src_snapshots = BackupDir.scan_backup_dirs(src)
       @opt.detect_expire_dirs(src_snapshots)
-      
+
       # コピー先の最新スナップショット
       dst_snapshots = BackupDir.scan_backup_dirs(dst)
       dst_snapshot = dst_snapshots[-1]
-      
+
       # コピー元フォルダの決定
       src_snapshot = nil
       src_snapshots.each do |snapshot|
@@ -259,7 +259,7 @@ module Qdumpfs
           break
         end
       end
-      
+
       if src_snapshot.nil?
         return false, nil, nil
       end

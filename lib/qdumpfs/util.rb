@@ -171,7 +171,7 @@ module QdumpfsUtils
         case File.ftype(src)
         when "file"
           same_file = same_file?(src, latest)
-          #          p "same_file? #{src} #{latest} result=#{same_file}"
+#          puts "same_file? #{src} #{latest} result=#{same_file}"
           if same_file
             type = "unchanged"
           else
@@ -183,6 +183,7 @@ module QdumpfsUtils
           type = "symlink"
         end
       else
+ #       puts "latest=#{latest}"
         case File.ftype(src)
         when "file"
           type = "new_file"

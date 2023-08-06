@@ -214,13 +214,13 @@ module Qdumpfs
       @dirs.each do |dir|
         validate_directory(dir)
       end
-      if @dirs.size == 2 && windows?
-        # ディレクトリが2つだけ指定されている場合、コピー先はntfsである必要がある
-        unless ntfs?(dst)
-          fstype = get_filesystem_type(dst)
-          raise sprintf("only NTFS is supported but %s is %s.", dst, fstype)
-        end      
-      end
+      # if @dirs.size == 2 && windows?
+      #   # ディレクトリが2つだけ指定されている場合、コピー先はntfsである必要がある
+      #   unless ntfs?(dst)
+      #     fstype = get_filesystem_type(dst)
+      #     raise sprintf("only NTFS is supported but %s is %s.", dst, fstype)
+      #   end      
+      # end
       if @dirs.size < min_count
         raise "#{min_count} directories required."
       end
