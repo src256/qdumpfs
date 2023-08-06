@@ -13,17 +13,28 @@ module Qdumpfs
           backup_dirs << backup_dir
         end
       end
+      backup_dirs.sort_by!{|backup_dir| backup_dir.date}
       backup_dirs
     end
     
     def self.find(backup_dirs, from_date, to_date)
       backup_dirs.select{|backup_dir| backup_dir.date >= from_date && backup_dir.date <= to_date}
     end
+
+    def self.dump(dirs)
+      dirs.each do |dir|
+        puts dir
+      end
+    end
     
     def initialize
       @keep = false
     end
     attr_accessor :path, :date, :keep
+
+    def to_s
+      "path=#{@path} date=#{@date} keep=#{@keep}"
+    end
   end
   
   
@@ -298,7 +309,7 @@ module Qdumpfs
     end
         
     def keep_dirs(backup_dirs, num)
-      num.downto(0) do |i|
+      (num - 1).downto(0) do |i|
         from_date, to_date = yield(i)
         dirs = BackupDir.find(backup_dirs, from_date, to_date)
         dirs[0].keep = true if dirs.size > 0
