@@ -319,13 +319,7 @@ module Qdumpfs
       end
       src = @opt.src
       dst = @opt.dst
-      
-      # Windowsの場合
-      if windows?
-        src  = expand_special_folders(src)
-        dst = expand_special_folders(dst)
-      end
-      
+            
       # 指定されたディレクトリの整合性チェック
       if same_directory?(src, dst) or sub_directory?(src, dst)
         raise "cannot copy a directory, `#{src}', into itself, `#{dst}'"
