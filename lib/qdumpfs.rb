@@ -104,8 +104,9 @@ module Qdumpfs
     private
     def log_result(src, today, elapsed)
       time  = Time.now.strftime("%Y-%m-%dT%H:%M:%S")
-      bytes = convert_bytes(@written_bytes)
-      msg = sprintf("%s: %s -> %s (in %.2f sec, %s written)\n", time, src, today, elapsed, bytes)
+      write_bytes = convert_bytes(@write_bytes)
+      link_bytes = convert_bytes(@link_bytes)
+      msg = sprintf("%s: %s -> %s (in %.2f sec, %s write, %s link)\n", time, src, today, elapsed, write_bytes, link_bytes)
       log(msg)
       log("error files:\n")
       i = 1
@@ -136,7 +137,7 @@ module Qdumpfs
       when "directory"
         FileUtils.mkpath(today)
       when "unchanged"
-        File.force_link(latest, today)
+        link(latest, today)
       when "updated"
         copy(src, today)
       when "new_file"
@@ -311,7 +312,8 @@ module Qdumpfs
       
       log("##### backup start #####")
       
-      @written_bytes = 0
+      @write_bytes = 0
+      @link_bytes = 0
       @error_files = []
       start_time = Time.now
       if @opt.backup_at
@@ -362,7 +364,8 @@ module Qdumpfs
       @opt.validate_directories(2)
       
       start_time = Time.now
-      @written_bytes = 0
+      @write_bytes = 0
+      @link_bytes = 0
       @error_files = []
       src = @opt.src
       dst = @opt.dst

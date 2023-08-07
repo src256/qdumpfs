@@ -116,7 +116,7 @@ module QdumpfsUtils
             block = r.sysread(block_size)
             w.syswrite(block)
             i += 1
-            @written_bytes += block.size
+            @write_bytes += block.size
           end
         }
       }
@@ -136,7 +136,12 @@ module QdumpfsUtils
     File.utime(stat.atime, stat.mtime, dest)
     File.chmod(stat.mode, dest) # not necessary. just to make sure
   end
-  
+
+  def link(src, dest)
+    @link_bytes += File.size(src)
+    File.force_link(src, dest)
+  end
+    
   def convert_bytes(bytes)
     if bytes < 1024
       sprintf("%dB", bytes)
