@@ -275,7 +275,7 @@ module Qdumpfs
       log("sync_latest src=#{src} latest=#{latest} today=#{today}")
 
       if latest
-        log("update_snapshot #{src} #{latest} #{today}")
+        log("update_snapshot src=#{src} latest=#{latest} today=#{today}")
         # バックアップがすでに存在する場合差分コピー
         update_snapshot(src, latest, today)
       else
