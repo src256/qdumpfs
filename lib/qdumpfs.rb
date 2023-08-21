@@ -68,8 +68,8 @@ module Qdumpfs
         command = Command.new(option)
         command.run
       rescue => e
+        puts e.message + "\n"
         if option.debug
-          p e.message
           p e.backtrace
         end
         puts opt.help
