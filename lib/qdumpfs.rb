@@ -182,16 +182,17 @@ module Qdumpfs
       # today: 差分バックアップ先ディレクトリ ex)j:/to/backup1/2019/05/10/home
       dirs = {};
       QdumpfsFind.find(@opt.logger, src) do |s|      # path of the source file
-        if @opt.matcher.exclude?(s)
-          if File.lstat(s).directory? then Find.prune() else next end
-        end
-        # バックアップ元ファイルのパスからディレクトリ部分を削除
-        r = make_relative_path(s, src)
-        # 既存バックアップファイルのパス
-        l = File.join(latest, r)  # path of the latest  snapshot
-        # 新規バックアップファイルのパス
-        t = File.join(today, r)   # path of the today's snapshot
         begin
+          if @opt.matcher.exclude?(s)
+            if File.lstat(s).directory? then Find.prune else next end
+          end
+          # バックアップ元ファイルのパスからディレクトリ部分を削除
+          r = make_relative_path(s, src)
+          # 既存バックアップファイルのパス
+          l = File.join(latest, r)  # path of the latest  snapshot
+          # 新規バックアップファイルのパス
+          t = File.join(today, r)   # path of the today's snapshot
+
           # ファイルのアップデート
           update_file(s, l, t)
           dirs[t] = File.stat(s) if File.ftype(s) == "directory"
@@ -208,12 +209,13 @@ module Qdumpfs
     def recursive_copy(src, dst)
       dirs = {}
       QdumpfsFind.find(@opt.logger, src) do |s|
-        if @opt.matcher.exclude?(s)
-          if File.lstat(s).directory? then Find.prune() else next end
-        end
-        r = make_relative_path(s, src)
-        t = File.join(dst, r)
         begin
+          if @opt.matcher.exclude?(s)
+            if File.lstat(s).directory? then Find.prune else next end
+          end
+          r = make_relative_path(s, src)
+          t = File.join(dst, r)
+
           type = detect_type(s)
           report(type, s)
           next if @opt.dry_run
@@ -228,7 +230,7 @@ module Qdumpfs
             # just ignore it
           else
             raise "#{type}: shouldn't be reached here"
-        end
+          end
           chown_if_root(type, s, t)
           dirs[t] = File.stat(s) if File.ftype(s) == "directory"
         rescue => e
@@ -424,7 +426,7 @@ module Qdumpfs
       file = @opt.open_verifyfile
     
       start_time = Time.now
-      add_log("##### verify start #{fmt(start_time)} #####")
+      log("##### verify start #{fmt(start_time)} #####")
     
       src_count, dst_count = do_verify(src, dst)
     
@@ -435,7 +437,7 @@ module Qdumpfs
       
       end_time = Time.now
       diff = time_diff(start_time, end_time)
-      add_log("##### list end #{fmt(end_time)} diff=#{diff} #####")
+      log("##### list end #{fmt(end_time)} diff=#{diff} #####")
       
       file.close 
     end

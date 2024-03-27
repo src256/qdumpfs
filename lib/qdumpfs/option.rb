@@ -68,6 +68,7 @@ module Qdumpfs
   class NullMatcher
     def initialize(options = {})
     end
+    # @param [Object] path
     def exclude?(path)
       false
     end

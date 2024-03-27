@@ -11,10 +11,13 @@ list*
 log.txt
 *test.cmd
 test*.cmd
+test*.sh
 *.log
 /data/to
 /data/to2
-
-
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dataSources.xml
+.idea/dataSources.local.xml
 /sync_d.cmd
-/test.
+/test

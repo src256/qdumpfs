@@ -35,7 +35,8 @@ class File
     begin
       File.unlink(dest) if File.anything_exist?(dest)
       File.symlink(src, dest)
-    rescue 
+    rescue
+      puts "force_symlink fails #{src} #{dest}"
     end
   end
 
@@ -65,10 +66,10 @@ module QdumpfsFind
   def find(logger, *paths)
     block_given? or return enum_for(__method__, *paths)
     paths.collect!{|d|
-      raise Errno::ENOENT unless File.exist?(d);
+      raise Errno::ENOENT unless File.exist?(d)
       d.dup
     }
-    while file = paths.shift
+    while (file = paths.shift)
       catch(:prune) do
         yield file.dup.taint
         begin
@@ -77,7 +78,7 @@ module QdumpfsFind
           logger.print("File.lstat path=#{file} error=#{e.message}")
           next
         end
-        if s.directory? then
+        if s.directory?
           begin
             fs = Dir.entries(file, :encoding=>'UTF-8')
           rescue => e
@@ -121,7 +122,7 @@ module QdumpfsUtils
         }
       }
     rescue EOFError => e
-      # puts e.message, e.backtrace
+       puts e.message
     end    
     unless FileTest.file?(dest)
       raise "copy_file fails #{dest}"
@@ -194,7 +195,7 @@ module QdumpfsUtils
           type = "new_file"
         when "link"
           type = "symlink"
-          end
+        end
       end
     end
     return type
