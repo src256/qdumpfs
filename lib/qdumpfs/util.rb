@@ -121,8 +121,10 @@ module QdumpfsUtils
           end
         }
       }
-    rescue EOFError => e
-       puts e.message
+    rescue EOFError
+      # この実装だとファイルサイズがblock_sizeより小さい場合にEOFErrorが発生する
+      # それはしかたがないので無視する
+      #       puts e.message
     end    
     unless FileTest.file?(dest)
       raise "copy_file fails #{dest}"
