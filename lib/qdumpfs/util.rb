@@ -1,4 +1,7 @@
 # coding: utf-8
+
+require 'fileutils'
+
 def wprintf(format, *args)
   STDERR.printf("pdumpfs: " + format + "\n", *args)
 end
@@ -108,24 +111,25 @@ module QdumpfsUtils
 
   # We don't use File.copy for calling @interval_proc.
   def copy_file(src, dest)
-    begin    
-      File.open(src, 'rb') {|r|
-        File.open(dest, 'wb') {|w|
-          block_size = (r.stat.blksize or 8192)
-          i = 0
-          while true
-            block = r.sysread(block_size)
-            w.syswrite(block)
-            i += 1
-            @write_bytes += block.size
-          end
-        }
-      }
-    rescue EOFError
-      # この実装だとファイルサイズがblock_sizeより小さい場合にEOFErrorが発生する
-      # それはしかたがないので無視する
-      #       puts e.message
-    end    
+    # begin
+    #   File.open(src, 'rb') {|r|
+    #     File.open(dest, 'wb') {|w|
+    #       block_size = (r.stat.blksize or 8192)
+    #       i = 0
+    #       while true
+    #         block = r.sysread(block_size)
+    #         w.syswrite(block)
+    #         i += 1
+    #         @write_bytes += block.size
+    #       end
+    #     }
+    #   }
+    # rescue EOFError
+    #   # この実装だとファイルサイズがblock_sizeより小さい場合にEOFErrorが発生する
+    #   # それはしかたがないので無視する
+    #   #       puts e.message
+    # end
+    FileUtils.cp(src, dest)
     unless FileTest.file?(dest)
       raise "copy_file fails #{dest}"
     end
