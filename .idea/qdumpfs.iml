@@ -32,24 +32,24 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="rake (v13.1.0) [path][gem]" type="rubylib">
+      <library name="rake (v13.2.0) [path][gem]" type="rubylib">
         <properties>
           <option name="version" value="4" />
         </properties>
         <CLASSES>
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/3.1.0/gems/rake-13.1.0/doc" />
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/3.1.0/gems/rake-13.1.0/exe" />
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/3.1.0/gems/rake-13.1.0/lib" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/3.1.0/gems/rake-13.2.0/doc" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/3.1.0/gems/rake-13.2.0/exe" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/3.1.0/gems/rake-13.2.0/lib" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/3.1.0/gems/rake-13.1.0/doc" />
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/3.1.0/gems/rake-13.1.0/exe" />
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/3.1.0/gems/rake-13.1.0/lib" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/3.1.0/gems/rake-13.2.0/doc" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/3.1.0/gems/rake-13.2.0/exe" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/3.1.0/gems/rake-13.2.0/lib" />
         </SOURCES>
         <excluded>
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/3.1.0/gems/rake-13.1.0/doc" />
-          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/3.1.0/gems/rake-13.1.0/exe" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/3.1.0/gems/rake-13.2.0/doc" />
+          <root url="file://$MODULE_DIR$/vendor/bundle/ruby/3.1.0/gems/rake-13.2.0/exe" />
         </excluded>
       </library>
     </orderEntry>

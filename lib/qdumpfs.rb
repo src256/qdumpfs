@@ -508,6 +508,7 @@ module Qdumpfs
         system("rmdir /S /Q #{win_backup_path}")
       else
         # Linux/macOSの場合
+        system("chmod -R u+w #{path}")
         system("rm -rf #{path}")
       end
     end
