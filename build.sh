@@ -5,15 +5,21 @@ set -x
 #export NOKOGIRI_USE_SYSTEM_LIBRARIES=1
 
 bundle_dir=./vendor/bundle
-if [ -d "$bundle_dir" ] ; then
+bundle config --local path $bundle_dir
+
+if [ "$1" = "clean" ]; then
+    echo "rm -rf $bundle_dir"
     /bin/rm -rf "$bundle_dir"
-    bundle update    
-else
-    /bin/rm -rf "$bundle_dir"
-    bundle install --path "$bundle_dir"
+    /bin/rm Gemfile.lock    
+    exit 0
 fi
 
-
-
-
-
+if [ -d "$bundle_dir" ] ; then
+    echo "bunlde update"
+    bundle update
+    bundle clean
+else
+    echo "bundle install"
+    /bin/rm -rf "$bundle_dir"
+    bundle install
+fi
