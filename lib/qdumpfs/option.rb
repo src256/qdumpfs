@@ -184,7 +184,7 @@ module Qdumpfs
         end
       else
         # 何も指定されていない場合
-        if type == 'new_file'
+        if type == 'new_file' || type == 'symlink'
           stat = File.stat(filename)
           size = stat.size
           msg = format_report(type, filename, size)

@@ -428,6 +428,8 @@ module Qdumpfs
       start_time = Time.now
       log("##### verify start #{fmt(start_time)} #####")
     
+      src = @opt.src
+      dst = @opt.dst
       src_count, dst_count = do_verify(src, dst)
     
       fputs(file, "#{src}: #{src_count}")

@@ -38,8 +38,9 @@ class File
     begin
       File.unlink(dest) if File.anything_exist?(dest)
       File.symlink(src, dest)
-    rescue
-      puts "force_symlink fails #{src} #{dest}"
+    rescue => e      
+      puts "force_symlink fails #{src} #{dest} #{e.message}"
+#      puts "File.symlink('#{src}', '#{dest}')"
     end
   end
 

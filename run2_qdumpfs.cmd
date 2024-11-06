@@ -1,6 +1,6 @@
 @echo off
 
-call uru 265p114
+call uru system
 
 qdumpfs %*
 

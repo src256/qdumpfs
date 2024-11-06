@@ -83,6 +83,34 @@ qdumpfs --command=expire --limit=1 --keep=5Y6M7W10D backup1 /backup2
 qdumpfs --command=delete --delete-dir=backup1 --limit=1  r:/backup2
 ```
 
+### バックアップの比較
+
+"--command verify"でバックアップを比較することができます。
+
+```
+qdumpfs  --command=verify j:/backup/2024/11/01 k:/backup/2024/11/01
+```
+
+### バックアップファイルの一覧
+
+"--command list"でバックアップファイルを一覧表示することができます。
+
+```
+qdumpfs  --command=list j:/backup/2024/11/01 
+```
+
+例えばverifyで異なる結果が表示された場合、listした結果をdiffすることができます。
+
+```
+qdumpfs  --command=list j:/backup/2024/11/01 
+qdumpfs  --command=list k:/backup/2024/11/01 
+diff list_j__backup_2024_11_01.txt list_k__backup_2024_11_01.txt
+```
+
+
+
+
+
 ## License
 
 qdumpfs is a free software with ABSOLUTELY NO WARRANTY under the terms of the GNU General Public License version 2.
