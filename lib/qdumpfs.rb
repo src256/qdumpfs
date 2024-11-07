@@ -125,8 +125,8 @@ module Qdumpfs
       @opt.report(type, file_name)
     end
 
-    def report_error(file_name, reason)
-      @opt.report_error(file_name, reason)
+    def report_error(file_name, exception)
+      @opt.report_error(file_name, exception)
     end
 
     def update_file(src, latest, today)
@@ -197,7 +197,7 @@ module Qdumpfs
           update_file(s, l, t)
           dirs[t] = File.stat(s) if File.ftype(s) == "directory"
         rescue => e
-          report_error(s, e.message)
+          report_error(s, e)
           @error_files << [s, e.message]          
           next
         end
@@ -234,7 +234,7 @@ module Qdumpfs
           chown_if_root(type, s, t)
           dirs[t] = File.stat(s) if File.ftype(s) == "directory"
         rescue => e
-          report_error(s, e.message)
+          report_error(s, e)
           @error_files << [s, e.message]
           next
         end

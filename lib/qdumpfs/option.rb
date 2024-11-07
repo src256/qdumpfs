@@ -184,18 +184,24 @@ module Qdumpfs
         end
       else
         # 何も指定されていない場合
-        if type == 'new_file' || type == 'symlink'
+        if type == 'new_file'
           stat = File.stat(filename)
           size = stat.size
           msg = format_report(type, filename, size)
+        elsif type == 'symlink'
+          # symlinkの場合File.statでエラーが発生する場合があるので使わない。
+          msg = format_report(type, filename, 0)
         end
       end
       log(msg)
     end
 
-    def report_error(filename, reason)
-      msg = sprintf("err_file\t%s\t%s\n", filename, reason)
+    def report_error(filename, ex)
+      msg = sprintf("err_file\t%s\t%s\n", filename, ex.message)
       log(msg)
+      ex.backtrace.each do |line|
+        log(line)
+      end
     end
     
     def log(msg, console = true)
