@@ -121,11 +121,17 @@ module Qdumpfs
       @cmd = @opts[:c] || 'backup'
       
       #      @logger = NullLogger.new
-      logfile = 'qdumpfs.log'
-      #ログディレクトリの作成      
-      @logdir = @opts[:logdir] || Dir.pwd
+      if @opts[:logpath]
+        @logpath = @opts[:logpath]
+        @logdir = File.dirname(@logpath)
+      else
+        logname = @opts[:logname] || 'qdumpfs.log'
+        #ログディレクトリの作成
+        @logdir = @opts[:logdir] || Dir.pwd
+        @logpath = File.join(@logdir, logname)
+      end
+
       Dir.mkdir(@logdir) unless FileTest.directory?(@logdir)
-      @logpath = File.join(@logdir, logfile)
       @logger = SimpleLogger.new(@logpath)
       
       verifyfile = 'verify.txt'

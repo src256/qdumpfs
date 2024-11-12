@@ -40,6 +40,8 @@ module Qdumpfs
       opt.on('-l HOURS', '--limit=HOURS', 'limit hours') {|v| opts[:limit] = v}
       opt.on('-k KEEPARG', '--keep=KEEPARG', 'ex: --keep 100Y12M12W30D (100years, 12months, 12weeks, 30days, default)') {|v| opts[:keep] = v}
       opt.on('--logdir=LOGDIR', 'logdir') {|v| opts[:logdir] = v}
+      opt.on('--logname=LOGNAME', 'logname') {|v| opts[:logname] = v}
+      opt.on('--logpath=LOGPATH', 'logpath') {|v| opts[:logpath] = v}
       opt.on('--delete-from=YYYYMMDD', 'delete backup from YYYY/MM/DD') {|v|
         opts[:delete_from] = Date.parse(v)
       }

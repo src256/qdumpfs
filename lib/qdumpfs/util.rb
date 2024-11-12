@@ -133,6 +133,8 @@ module QdumpfsUtils
     FileUtils.cp(src, dest)
     unless FileTest.file?(dest)
       raise "copy_file fails #{dest}"
+    else
+      @write_bytes += block.size
     end
   end 
   
