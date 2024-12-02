@@ -59,11 +59,7 @@ module Qdumpfs
       @file.puts msg
     end
   end
-  
-  
-  class Error < StandardError
-  end
-  
+
   
   class NullMatcher
     def initialize(options = {})

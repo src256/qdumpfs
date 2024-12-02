@@ -198,6 +198,8 @@ module Qdumpfs
           # ファイルのアップデート
           update_file(s, l, t)
           dirs[t] = File.stat(s) if File.ftype(s) == "directory"
+        rescue Errno::ENOSPC
+          raise
         rescue => e
           report_error(s, e)
           @error_files << [s, e.message]          
@@ -235,6 +237,8 @@ module Qdumpfs
           end
           chown_if_root(type, s, t)
           dirs[t] = File.stat(s) if File.ftype(s) == "directory"
+        rescue Errno::ENOSPC
+          raise
         rescue => e
           report_error(s, e)
           @error_files << [s, e.message]
@@ -309,7 +313,29 @@ module Qdumpfs
       }
       return nil
     end
-    
+
+    def incomplete_backup(today)
+      #      puts "incomplete_backup #{today}"
+      # バックアップが途中で終了した場合、そのディレクトリをリネームする
+      dirname = File.dirname(today)
+      prefix = "_"
+      incomplete = dirname.sub(/(\d+)$/, prefix + '\1')
+      return unless FileTest.directory?(dirname) # バックアップが途中で途中で終了。ただしまだ日付ディレクトリが存在しない場合はなにもしない。
+
+      # すでにincompleteが存在する場合はユニークな名前を探す
+      0.upto(10) do |i|
+        break unless FileTest.exist?(incomplete)
+        prefix += "_"
+        incomplete = dirname.sub(/(\d+)$/, prefix + '\1')
+      end
+      if FileTest.directory?(incomplete)
+        log("cannot rename incomplete backup: #{incomplete}")
+      else
+        FileUtils.mv(dirname, incomplete)
+        log("rename incomplete backup: #{dirname} -> #{incomplete}")
+      end
+    end
+
     def backup
       #####  オリジナルのバックアップルーチン
       @opt.validate_directories(2)
@@ -336,31 +362,37 @@ module Qdumpfs
       base = File.basename(src)
       dirname = File.dirname(src)
       raise RuntimeError unless FileTest.exist?(dirname + '/' + base)
-      
-      # 存在するバックアップの最新を取得
-      latest = latest_snapshot(start_time, src, dst, base)
-      # 現在の日付フォルダを取得j:/to/backup1/2019/05/10/home
-      today  = File.join(dst, datedir(start_time), base)
-      File.umask(0077)
-      FileUtils.mkpath(today) unless @opt.dry_run
-      if windows?
-        src = src.sub( /^[A-Za-z]:$/, src + "/" )
+
+      begin
+        # 存在するバックアップの最新を取得
+        latest = latest_snapshot(start_time, src, dst, base)
+        # 現在の日付フォルダを取得j:/to/backup1/2019/05/10/home
+        today  = File.join(dst, datedir(start_time), base)
+        File.umask(0077)
+        FileUtils.mkpath(today) unless @opt.dry_run
+        if windows?
+          src = src.sub( /^[A-Za-z]:$/, src + "/" )
+        end
+        if latest
+          # バックアップがすでに存在する場合差分コピー
+          log("## update_snapshot #{src} #{latest}=>#{today} ##")
+          update_snapshot(src, latest, today)
+        else
+          # 初回は単純に再帰コピー
+          log("## recursive_copy #{src}=>#{today} ##")
+          recursive_copy(src, today)
+        end
+        unless @opt.dry_run
+          create_latest_symlink(dst, today)
+          elapsed = Time.now - start_time
+          log_result(src, today, elapsed)
+        end
+        log("##### backup end #####")
+      rescue Errno::ENOSPC
+        # 直前のmkpathでエラーが発生した場合 Errno::ENOSPCが発生する。内部ではIncompleteErrorに変換している
+        incomplete_backup(today)
+        log("##### backup incomplete(No space left on device) #####")
       end
-      if latest
-        # バックアップがすでに存在する場合差分コピー
-        log("## update_snapshot #{src} #{latest}=>#{today} ##")
-        update_snapshot(src, latest, today)
-      else
-        # 初回は単純に再帰コピー
-        log("## recursive_copy #{src}=>#{today} ##")
-        recursive_copy(src, today)
-      end
-      unless @opt.dry_run
-        create_latest_symlink(dst, today)
-        elapsed = Time.now - start_time
-        log_result(src, today, elapsed)
-      end
-      log("##### backup end #####")
     end
     
     def sync
@@ -379,49 +411,55 @@ module Qdumpfs
       log("##### sync start #{fmt(start_time)} => limit_time=#{fmt(limit_time)} #####")
       count = 0
       last_sync_complete = false
-      while true
-        count += 1
-        log("## sync_latest count=#{count} ##")
-        latest_start = Time.now
-        sync_result, from, to = sync_latest(src, dst)
-        latest_end = Time.now
-        
-        log("## sync_latest result=#{sync_result} from=#{from} to=#{to} ##")
-        unless sync_result
-          # 同期結果がtrueでない場合ここで終了。ただしsync_result=falseになるのはコピー元フォルダが存在しない場合なので、
-          # 中途半端な結果にはならない
-          last_sync_complete = true
-          break
-        end
-        
-        from_count, to_count = do_verify(from, to)
-        log("## from_count=#{from_count} to_count=#{to_count} equals=#{from_count == to_count} ##") 
-        unless from_count == to_count
-          # ファイル数が同じでない場合ここで終了
-          last_sync_complete = false
-          break        
-        end
-        
-        # 次回同期にかかる時間を最終同期時間の半分と予想
-        next_sync = (latest_end - latest_start) / 2
-        
-        cur_time = Time.now
-        in_limit = (cur_time + next_sync) < limit_time
-        log("## cur_time=#{fmt(cur_time)} + next_sync=#{next_sync} <  limit_time=#{fmt(limit_time)} in_limit=#{in_limit} ## ")
-        unless in_limit
-          # 指定時間内ではない場合ここで終了(ただし最終同期は成功)
-          last_sync_complete = true
-          break                
-        end
-      end
-      
-      end_time = Time.now
-      diff = time_diff(start_time, end_time)
 
-      elapsed = Time.now - start_time
-      log_result(src, dst, elapsed)
-        
-      log("##### sync end #{fmt(end_time)} diff=#{diff} last_sync_complete=#{last_sync_complete} #####")
+      begin
+        while true
+          count += 1
+          log("## sync_latest count=#{count} ##")
+          latest_start = Time.now
+          sync_result, from, to = sync_latest(src, dst)
+          latest_end = Time.now
+
+          log("## sync_latest result=#{sync_result} from=#{from} to=#{to} ##")
+          unless sync_result
+            # 同期結果がtrueでない場合ここで終了。ただしsync_result=falseになるのはコピー元フォルダが存在しない場合なので、
+            # 中途半端な結果にはならない
+            last_sync_complete = true
+            break
+          end
+
+          from_count, to_count = do_verify(from, to)
+          log("## from_count=#{from_count} to_count=#{to_count} equals=#{from_count == to_count} ##")
+          unless from_count == to_count
+            # ファイル数が同じでない場合ここで終了
+            last_sync_complete = false
+            break
+          end
+
+          # 次回同期にかかる時間を最終同期時間の半分と予想
+          next_sync = (latest_end - latest_start) / 2
+
+          cur_time = Time.now
+          in_limit = (cur_time + next_sync) < limit_time
+          log("## cur_time=#{fmt(cur_time)} + next_sync=#{next_sync} <  limit_time=#{fmt(limit_time)} in_limit=#{in_limit} ## ")
+          unless in_limit
+            # 指定時間内ではない場合ここで終了(ただし最終同期は成功)
+            last_sync_complete = true
+            break
+          end
+        end
+
+        end_time = Time.now
+        diff = time_diff(start_time, end_time)
+
+        elapsed = Time.now - start_time
+        log_result(src, dst, elapsed)
+
+        log("##### sync end #{fmt(end_time)} diff=#{diff} last_sync_complete=#{last_sync_complete} #####")
+      rescue Errno::ENOSPC
+        incomplete_backup(today)
+        log("##### backup incomplete(No space left on device) #####")
+      end
     end
       
     def verify
