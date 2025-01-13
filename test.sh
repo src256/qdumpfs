@@ -2,7 +2,7 @@
 
 if [ "$1" = "" ]; then
 #  bundle exec rspec
-  bundle exec rails test
+  bundle exec rake test
 else
   # 以下のように実行  
     # ./test.sh test/unit/checker_test.rb
