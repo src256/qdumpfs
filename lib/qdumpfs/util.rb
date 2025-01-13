@@ -69,19 +69,20 @@ end
 module QdumpfsFind
   def find(logger, *paths)
     block_given? or return enum_for(__method__, *paths)
-    paths.collect!{|d|
+    paths.each do |d|
       raise Errno::ENOENT unless File.exist?(d)
-      d.dup
-    }
-    while (file = paths.shift)
+    end
+    while file = paths.shift
       catch(:prune) do
-        yield file.dup.taint
+        yield file.dup
+
         begin
           s = File.lstat(file)
         rescue => e
           logger.print("File.lstat path=#{file} error=#{e.message}")
           next
         end
+
         if s.directory?
           begin
             fs = Dir.entries(file, :encoding=>'UTF-8')
@@ -90,11 +91,11 @@ module QdumpfsFind
             next
           end
           fs.sort!
-          fs.reverse_each {|f|
+          fs.reverse_each do |f|
             next if f == "." or f == ".."
             f = File.join(file, f)
-            paths.unshift f.untaint
-          }
+            paths.unshift f
+          end
         end
       end
     end

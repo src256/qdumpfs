@@ -20,5 +20,4 @@ test*.sh
 .idea/dataSources.xml
 .idea/dataSources.local.xml
 /sync_d.cmd
-/test
 *.txt
