@@ -55,6 +55,7 @@ module Qdumpfs
         opts[:backup_at] = Date.parse(v)
       }
       opt.on('-d', '--debug', 'debug mode') {|v| opts[:d] = v }
+      opt.on('-q', '--quiet', 'quiet mode') {|v| opts[:q] = v }
       opt.parse!(argv)
       option = Option.new(opts, argv)
       if opts[:v]

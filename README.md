@@ -72,20 +72,22 @@ qdumpfs --command=sync --limit=1 --keep=5Y6M7W10D backup1 /backup2
 例えばコピー先に2024/11/01のバックアップが存在する場合、コピー元の2024/11/01より後のバックアップデータ(例えば2024/11/02)があれば、それが同期されます(同じ日付は同期されません)。
 
 
-```
 
 
 ### バックアップフォルダの削除
 
 "--command expire"で、"--keep="パターンに該当しないバックアップを削除できます。
+
+
 ```
 qdumpfs --command=expire --limit=1 --keep=5Y6M7W10D backup1 /backup2
 ```
 
-
 ### バックアップフォルダから指定パターンを削除
 
 "--command delete"で、バックアップに存在する指定したパスを削除できます(間違えてバックアップした内容を削除したい場合などに使用)。
+
+
 ```
 qdumpfs --command=delete --delete-dir=backup1 --limit=1  r:/backup2
 ```
@@ -113,9 +115,6 @@ qdumpfs  --command=list j:/backup/2024/11/01
 qdumpfs  --command=list k:/backup/2024/11/01 
 diff list_j__backup_2024_11_01.txt list_k__backup_2024_11_01.txt
 ```
-
-
-
 
 
 ## License

@@ -116,22 +116,25 @@ module Qdumpfs
       @dst = dirs[1] if dirs.size > 1
       @cmd = @opts[:c] || 'backup'
       
-      #      @logger = NullLogger.new
-      if @opts[:logpath]
-        @logpath = @opts[:logpath]
-        @logdir = File.dirname(@logpath)
+      if @opts[:q]
+        @logger = NullLogger.new
       else
-        logname = @opts[:logname] || 'qdumpfs.log'
-        #ログディレクトリの作成
-        @logdir = @opts[:logdir] || Dir.pwd
-        @logpath = File.join(@logdir, logname)
+        if @opts[:logpath]
+          @logpath = @opts[:logpath]
+          @logdir = File.dirname(@logpath)
+        else
+          logname = @opts[:logname] || 'qdumpfs.log'
+          #ログディレクトリの作成
+          @logdir = @opts[:logdir] || Dir.pwd
+          @logpath = File.join(@logdir, logname)
+        end
+        Dir.mkdir(@logdir) unless FileTest.directory?(@logdir)
+        @logger = SimpleLogger.new(@logpath)
+
+        verifyfile = 'verify.txt'
+        @verifypath = File.join(@logdir, verifyfile)
       end
 
-      Dir.mkdir(@logdir) unless FileTest.directory?(@logdir)
-      @logger = SimpleLogger.new(@logpath)
-      
-      verifyfile = 'verify.txt'
-      @verifypath = File.join(@logdir, verifyfile)
 
       @matcher = NullMatcher.new
       
@@ -208,7 +211,7 @@ module Qdumpfs
     
     def log(msg, console = true)
       return if (msg.nil? || msg == '')
-      puts msg if console
+      puts msg if console && !@opts[:q]
       @logger.print(msg)
     end
     
