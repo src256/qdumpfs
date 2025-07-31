@@ -1,0 +1,54 @@
+<h1 id="qdumpfs">Qdumpfs</h1>
+<p>pdumpfsの個人的改良版です。</p>
+<p>Gem化して最近のバージョンのバージョンのRubyに対応。コマンドの拡張などを行っています。</p>
+<h2 id="インストール">インストール</h2>
+<p>gem install qdumpfs</p>
+<h2 id="使用方法">使用方法</h2>
+<pre><code>Usage: qdumpfs [options] &lt;source&gt; &lt;dest&gt;
+    -h, --help                       show this message
+Options
+    -v, --verbose                    verbose message
+    -r, --report                     report message
+    -n, --dry-run                    don&#39;t actually run any commands
+    -e, --exclude=PATTERN            exclude files/directories matching PATTERN
+    -s, --exclude-by-size=SIZE       exclude files larger than SIZE
+    -w, --exclude-by-glob=GLOB       exclude files matching GLOB
+    -c, --command=COMMAND            backup|sync|list|expire|verify|delete
+    -l, --limit=HOURS                limit hours
+    -k, --keep=KEEPARG               ex: --keep 100Y12M12W30D (100years, 12months, 12weeks, 30days, default)</code></pre>
+<h2 id="実行例">実行例</h2>
+<h3 id="バックアップ">バックアップ</h3>
+<p>バックアップを実行する場合。</p>
+<p><code>qdumpfs コピー元 コピー先</code>でバックアップを作成することができます。コピー先が存在する場合差分バックアップとなります。</p>
+<pre><code>qdumpfs /home/foo /backup</code></pre>
+<p><code>--command backup</code>オプションを明示することもできます。</p>
+<pre><code>qdumpfs --command=backup /home/foo /backup</code></pre>
+<h3 id="バックアップフォルダの同期">バックアップフォルダの同期</h3>
+<p>バックアップフォルダを同期することもできます。バックアップディスクが手狭になり、新しいディスクに移行したい場合に便利です。</p>
+<p><code>--command sync</code>オプションを指定することでバックアップフォルダを同期できます。</p>
+<pre><code>qdumpfs --command=sync /backup1 /backup2</code></pre>
+<p>バックアップフォルダの同期には膨大な時間が必要な場合があるため、実行時間を制限できます。以下は例えば1時間に制限する場合です。</p>
+<p>実行時間が1時間を超えるとそこで処理が終了しますそこから次回継続することができます。</p>
+<pre><code>qdumpfs --command=sync --limit=1 /backup1 /backup2</code></pre>
+<p>バックアップフォルダを間引きたい場合、<code>--keep=</code>オプションを指定することができます。“100Y12M12W30D”を指定すると、100年間は年に1つ、12ヶ月間は月に1つ、12週間は週に1つ、直近30日間のバックアップを保持します。条件に該当しないバックアップは同期されません。</p>
+<pre><code>qdumpfs --command=sync --limit=1 --keep=5Y6M7W10D backup1 /backup2</code></pre>
+<p>バックアップの同期は、コピー先の最新の日付より新しいコピー元を選択して実行されます。これはバックアップの同期が途中で中断された場合、再開することができるようにするためです。</p>
+<p>例えばコピー先に2024/11/01のバックアップが存在する場合、コピー元の2024/11/01より後のバックアップデータ(例えば2024/11/02)があれば、それが同期されます(同じ日付は同期されません)。</p>
+<h3 id="バックアップフォルダの削除">バックアップフォルダの削除</h3>
+<p><code>--command expire</code>で、<code>--keep=パターン</code>に該当しないバックアップを削除できます。</p>
+<pre><code>qdumpfs --command=expire --limit=1 --keep=5Y6M7W10D backup1 /backup2</code></pre>
+<h3 id="バックアップフォルダから指定パターンを削除">バックアップフォルダから指定パターンを削除</h3>
+<p><code>--command delete</code>で、バックアップに存在する指定したパスを削除できます(間違えてバックアップした内容を削除したい場合などに使用)。</p>
+<pre><code>qdumpfs --command=delete --delete-dir=backup1 --limit=1  r:/backup2</code></pre>
+<h3 id="バックアップの比較">バックアップの比較</h3>
+<p><code>--command verify</code>でバックアップを比較することができます。</p>
+<pre><code>qdumpfs  --command=verify j:/backup/2024/11/01 k:/backup/2024/11/01</code></pre>
+<h3 id="バックアップファイルの一覧">バックアップファイルの一覧</h3>
+<p><code>--command list</code>でバックアップファイルを一覧表示することができます。</p>
+<pre><code>qdumpfs  --command=list j:/backup/2024/11/01 </code></pre>
+<p>例えばverifyで異なる結果が表示された場合、listした結果をdiffすることができます。</p>
+<pre><code>qdumpfs  --command=list j:/backup/2024/11/01 
+qdumpfs  --command=list k:/backup/2024/11/01 
+diff list_j__backup_2024_11_01.txt list_k__backup_2024_11_01.txt</code></pre>
+<h2 id="license">License</h2>
+<p>qdumpfs is a free software with ABSOLUTELY NO WARRANTY under the terms of the GNU General Public License version 2.</p>

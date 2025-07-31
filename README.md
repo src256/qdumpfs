@@ -1,14 +1,33 @@
 # Qdumpfs
 
-pdumpfsの個人的改良版です。
+**Language**: [English](#) | [日本語](README_ja.md)
 
-Gem化して最近のバージョンのバージョンのRubyに対応。コマンドの拡張などを行っています。
+Qdumpfs is an efficient incremental backup tool developed as a personal improvement of pdumpfs.
 
-## インストール
+This tool modernizes pdumpfs as a Ruby Gem, supporting recent Ruby versions (Ruby 3.2+ compatible). It creates incremental backups with date-based directory structure (YYYY/MM/DD format), copying only changed files and using hard links for unchanged files to maximize storage efficiency.
 
+## Features
+
+- **Efficient Incremental Backup**: Copies only changed files, saves space with hard links for unchanged files
+- **Date-based Management**: Organized backups in YYYY/MM/DD directory structure
+- **Cross-platform Support**: Works on Windows/Unix/macOS environments
+- **Ruby 3.2+ Compatible**: Supports latest Ruby versions (taint/untaint methods removed)
+- **Rich Exclusion Options**: Flexible exclusion settings with regex patterns, file size, and glob patterns
+- **Comprehensive Backup Management**: Sync, verify, delete, list and other management functions
+
+## Installation
+
+```bash
 gem install qdumpfs
+```
 
-## 使用方法
+## Requirements
+
+- **Ruby**: 3.0 or higher (Ruby 3.2+ compatible)
+- **OS**: Windows, Linux, macOS
+- **Dependencies**: Standard library only (no additional gems required)
+
+## Usage
 
 ```
 Usage: qdumpfs [options] <source> <dest>
@@ -25,100 +44,151 @@ Options
     -k, --keep=KEEPARG               ex: --keep 100Y12M12W30D (100years, 12months, 12weeks, 30days, default)
 ```
 
-## 実行例
+## Examples
 
-### バックアップ
+### Backup
 
-バックアップを実行する場合。
+To perform a backup operation:
 
-「qdumpfs コピー元 コピー先」でバックアップを作成することができます。コピー先が存在する場合差分バックアップとなります。
+You can create a backup with `qdumpfs source destination`. If the destination exists, it becomes an incremental backup.
 
-```
+```bash
 qdumpfs /home/foo /backup
 ```
 
-"--command backup"オプションを明示することもできます。
+You can also explicitly specify the `--command backup` option:
 
-```
+```bash
 qdumpfs --command=backup /home/foo /backup
 ```
 
-### バックアップフォルダの同期
+### Backup Folder Synchronization
 
-バックアップフォルダを同期することもできます。バックアップディスクが手狭になり、新しいディスクに移行したい場合に便利です。
+You can also synchronize backup folders. This is useful when your backup disk becomes tight and you want to migrate to a new disk.
 
-"--command sync"オプションを指定することでバックアップフォルダを同期できます。
+You can synchronize backup folders by specifying the `--command sync` option:
 
-```
+```bash
 qdumpfs --command=sync /backup1 /backup2
 ```
 
-バックアップフォルダの同期には膨大な時間が必要な場合があるため、実行時間を制限できます。以下は例えば1時間に制限する場合です。
+Since synchronization of backup folders may require an enormous amount of time, you can limit the execution time. For example, to limit to 1 hour:
 
-実行時間が1時間を超えるとそこで処理が終了しますそこから次回継続することができます。
+When the execution time exceeds 1 hour, the process ends there and can be resumed from there next time.
 
-```
+```bash
 qdumpfs --command=sync --limit=1 /backup1 /backup2
 ```
 
-バックアップフォルダを間引きたい場合、"--keep="オプションを指定することができます。 "100Y12M12W30D"を指定すると、100年間は年に1つ、12ヶ月間は月に1つ、12週間は週に1つ、直近30日間のバックアップを保持します。
-条件に該当しないバックアップは同期されません。
+When you want to thin out backup folders, you can specify the `--keep=` option. Specifying "100Y12M12W30D" will keep one backup per year for 100 years, one per month for 12 months, one per week for 12 weeks, and all backups for the last 30 days. Backups that don't meet these conditions will not be synchronized.
 
-```
+```bash
 qdumpfs --command=sync --limit=1 --keep=5Y6M7W10D backup1 /backup2
 ```
 
-バックアップの同期は、コピー先の最新の日付より新しいコピー元を選択して実行されます。これはバックアップの同期が途中で中断された場合、再開することができるようにするためです。
-例えばコピー先に2024/11/01のバックアップが存在する場合、コピー元の2024/11/01より後のバックアップデータ(例えば2024/11/02)があれば、それが同期されます(同じ日付は同期されません)。
+Backup synchronization is performed by selecting source backups newer than the latest date in the destination. This allows backup synchronization to resume if interrupted midway.
 
+For example, if a backup from 2024/11/01 exists in the destination, and there is backup data after 2024/11/01 in the source (e.g., 2024/11/02), it will be synchronized (backups with the same date are not synchronized).
 
+### Backup Folder Deletion
 
+With `--command expire`, you can delete backups that don't match the `--keep=pattern`.
 
-### バックアップフォルダの削除
-
-"--command expire"で、"--keep="パターンに該当しないバックアップを削除できます。
-
-
-```
+```bash
 qdumpfs --command=expire --limit=1 --keep=5Y6M7W10D backup1 /backup2
 ```
 
-### バックアップフォルダから指定パターンを削除
+### Delete Specified Patterns from Backup Folders
 
-"--command delete"で、バックアップに存在する指定したパスを削除できます(間違えてバックアップした内容を削除したい場合などに使用)。
+With `--command delete`, you can delete specified paths that exist in backups (useful for deleting content that was mistakenly backed up).
 
-
-```
-qdumpfs --command=delete --delete-dir=backup1 --limit=1  r:/backup2
-```
-
-### バックアップの比較
-
-"--command verify"でバックアップを比較することができます。
-
-```
-qdumpfs  --command=verify j:/backup/2024/11/01 k:/backup/2024/11/01
+```bash
+qdumpfs --command=delete --delete-dir=backup1 --limit=1 r:/backup2
 ```
 
-### バックアップファイルの一覧
+### Backup Comparison
 
-"--command list"でバックアップファイルを一覧表示することができます。
+You can compare backups with `--command verify`:
 
+```bash
+qdumpfs --command=verify j:/backup/2024/11/01 k:/backup/2024/11/01
 ```
-qdumpfs  --command=list j:/backup/2024/11/01 
+
+### Backup File Listing
+
+You can list backup files with `--command list`:
+
+```bash
+qdumpfs --command=list j:/backup/2024/11/01
 ```
 
-例えばverifyで異なる結果が表示された場合、listした結果をdiffすることができます。
+For example, if verify shows different results, you can diff the list results:
 
-```
-qdumpfs  --command=list j:/backup/2024/11/01 
-qdumpfs  --command=list k:/backup/2024/11/01 
+```bash
+qdumpfs --command=list j:/backup/2024/11/01
+qdumpfs --command=list k:/backup/2024/11/01
 diff list_j__backup_2024_11_01.txt list_k__backup_2024_11_01.txt
 ```
 
+## How Backup Works
+
+Qdumpfs achieves efficient backup through the following mechanisms:
+
+### Directory Structure
+
+```
+backup_destination/
+├── 2024/
+│   ├── 01/
+│   │   ├── 15/  # Backup from January 15, 2024
+│   │   └── 16/  # Backup from January 16, 2024
+│   └── 02/
+│       └── 01/  # Backup from February 1, 2024
+└── latest -> 2024/02/01  # Symbolic link to latest backup
+```
+
+### Incremental Backup
+
+- **New files**: Full copy from source to destination
+- **Modified files**: Overwrite copy with latest content
+- **Unchanged files**: Create hard link from previous backup (saves space)
+- **Deleted files**: Not deleted from backup, preserved as history
+
+### Retention Policy
+
+The `--keep` option allows fine-grained control of backup retention periods:
+
+- `Y` (Years): Retention by year
+- `M` (Months): Retention by month
+- `W` (Weeks): Retention by week
+- `D` (Days): Retention by day
+
+Example: `--keep=5Y12M12W30D`
+- For 5 years: Keep one backup per year
+- For last 12 months: Keep one backup per month
+- For last 12 weeks: Keep one backup per week
+- For last 30 days: Keep all backups
+
+## Development & Testing
+
+```bash
+# Run tests
+./test.sh
+
+# Run specific test file
+./test.sh test/qdumpfs_test.rb
+
+# Install dependencies
+bundle install
+
+# Build gem
+bundle exec rake build
+```
+
+## Contributing
+
+Bug reports and feature requests are welcome at [GitHub Issues](https://github.com/src256/qdumpfs/issues).
 
 ## License
 
 qdumpfs is a free software with ABSOLUTELY NO WARRANTY under the terms of the GNU General Public License version 2.
-
-
