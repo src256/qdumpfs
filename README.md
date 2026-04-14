@@ -86,6 +86,14 @@ When you want to thin out backup folders, you can specify the `--keep=` option. 
 qdumpfs --command=sync --limit=1 --keep=5Y6M7W10D backup1 /backup2
 ```
 
+To sync only the first backup of each year (e.g., for long-term archiving), set month, week, and day retention to 0:
+
+```bash
+qdumpfs --command=sync --keep=100Y0M0W0D /backup1 /backup2
+```
+
+This keeps the first backup per year for the last 100 years, while skipping monthly, weekly, and daily backups. Only backups matching the `--keep` retention policy are selected for synchronization.
+
 Backup synchronization is performed by selecting source backups newer than the latest date in the destination. This allows backup synchronization to resume if interrupted midway.
 
 For example, if a backup from 2024/11/01 exists in the destination, and there is backup data after 2024/11/01 in the source (e.g., 2024/11/02), it will be synchronized (backups with the same date are not synchronized).
