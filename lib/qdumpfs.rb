@@ -35,6 +35,7 @@ module Qdumpfs
       }
       opt.on('-s SIZE', '--exclude-by-size=SIZE', 'exclude files larger than SIZE') {|v| opts[:es] = v }
       opt.on('-w GLOB', '--exclude-by-glob=GLOB', 'exclude files matching GLOB') {|v| opts[:eg] = v }
+      opt.on('-x', '--one-file-system', "don't cross filesystem boundaries") {|v| opts[:x] = v }
       commands = ['backup', 'sync', 'list', 'expire', 'verify', 'delete']
       opt.on('-c COMMAND', '--command=COMMAND', commands, commands.join('|')) {|v| opts[:c] = v}
       opt.on('-l HOURS', '--limit=HOURS', 'limit hours') {|v| opts[:limit] = v}
@@ -184,7 +185,7 @@ module Qdumpfs
       # latest: 最新のバックアップディレクトリ ex)j:/to/backup1/2019/05/09/home
       # today: 差分バックアップ先ディレクトリ ex)j:/to/backup1/2019/05/10/home
       dirs = {};
-      QdumpfsFind.find(@opt.logger, src) do |s|      # path of the source file
+      QdumpfsFind.find(@opt.logger, src, one_file_system: @opt.one_file_system, notify: method(:log)) do |s|      # path of the source file
         begin
           if @opt.matcher.exclude?(s)
             if File.lstat(s).directory? then Find.prune else next end
@@ -213,7 +214,7 @@ module Qdumpfs
 
     def recursive_copy(src, dst)
       dirs = {}
-      QdumpfsFind.find(@opt.logger, src) do |s|
+      QdumpfsFind.find(@opt.logger, src, one_file_system: @opt.one_file_system, notify: method(:log)) do |s|
         begin
           if @opt.matcher.exclude?(s)
             if File.lstat(s).directory? then Find.prune else next end
@@ -492,7 +493,7 @@ module Qdumpfs
       log("##### list start #{fmt(start_time)} #####")
       
       src = @opt.src
-      QdumpfsFind.find(@opt.logger, src) do |path|
+      QdumpfsFind.find(@opt.logger, src, one_file_system: @opt.one_file_system, notify: method(:log)) do |path|
         short_path = path.sub(/^#{src}/, '.')
         log("#{File.ftype(path)} #{path}")
         if FileTest.file?(path)

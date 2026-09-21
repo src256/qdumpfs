@@ -67,17 +67,37 @@ end
 
 
 module QdumpfsFind
-  def find(logger, *paths)
-    block_given? or return enum_for(__method__, *paths)
+  # one_file_system: trueの場合、起点と異なるファイルシステム(マウントポイント)には降りない
+  # falseの場合は降りるが、境界をまたいだことをnotifyで警告する
+  # notify: 境界に関するメッセージの出力先(省略時はloggerのみ)
+  def find(logger, *paths, one_file_system: false, notify: nil)
+    block_given? or return enum_for(__method__, *paths, one_file_system: one_file_system, notify: notify)
     paths.each do |d|
       raise Errno::ENOENT unless File.exist?(d)
     end
-    while file = paths.shift
+    notify ||= lambda {|msg| logger.print(msg) }
+    # [パス, 親ディレクトリのデバイス番号]のキュー
+    queue = paths.map {|d| [d, File.stat(d).dev] }
+    while entry = queue.shift
+      file, dev = entry
       catch(:prune) do
+        # lstatに失敗した場合は判定せずyieldし、エラー処理は呼び出し側に任せる
+        s = File.lstat(file) rescue nil
+        if s && s.directory? && s.dev != dev
+          if one_file_system
+            # 別ファイルシステムは中身に一切触れずにスキップ
+            notify.call("skip other filesystem path=#{file}")
+            next
+          end
+          notify.call("warn: crossing filesystem boundary path=#{file} (use --one-file-system to skip)")
+          dev = s.dev
+        end
+
         yield file.dup
 
+        # yield前に取得できていれば再利用し、lstatの回数を増やさない
         begin
-          s = File.lstat(file)
+          s ||= File.lstat(file)
         rescue => e
           logger.print("File.lstat path=#{file} error=#{e.message}")
           next
@@ -94,7 +114,7 @@ module QdumpfsFind
           fs.reverse_each do |f|
             next if f == "." or f == ".."
             f = File.join(file, f)
-            paths.unshift f
+            queue.unshift [f, dev]
           end
         end
       end

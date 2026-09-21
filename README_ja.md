@@ -39,6 +39,7 @@ Options
     -e, --exclude=PATTERN            exclude files/directories matching PATTERN
     -s, --exclude-by-size=SIZE       exclude files larger than SIZE
     -w, --exclude-by-glob=GLOB       exclude files matching GLOB
+    -x, --one-file-system            don't cross filesystem boundaries
     -c, --command=COMMAND            backup|sync|list|expire|verify|delete
     -l, --limit=HOURS                limit hours
     -k, --keep=KEEPARG               ex: --keep 100Y12M12W30D (100years, 12months, 12weeks, 30days, default)

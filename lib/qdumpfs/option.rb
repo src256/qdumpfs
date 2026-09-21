@@ -222,6 +222,10 @@ module Qdumpfs
     def verbose
       @opts[:v]
     end
+
+    def one_file_system
+      @opts[:x]
+    end
     
     def limit_sec
       @limit.to_i * 3600

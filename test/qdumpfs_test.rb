@@ -31,6 +31,47 @@ class QdumpfsTest < Minitest::Test
     assert_equal("", result)
   end
 
+  def test_backup_one_file_system
+    skip "hdiutilが必要(macOSのみ)" unless system('which hdiutil > /dev/null 2>&1')
+
+    FileUtils.cp_r(DATA_DIR, SRC_DIR)
+    mnt = File.join(SRC_DIR, 'mnt')
+    FileUtils.mkdir(mnt)
+    Dir.mktmpdir do |tmp|
+      # 別ファイルシステムをバックアップ元の中にマウント
+      image = File.join(tmp, 'other.dmg')
+      assert system("hdiutil create -quiet -size 1m -fs HFS+ -volname qdumpfs_test #{image}")
+      assert system("hdiutil attach -quiet -nobrowse -mountpoint #{mnt} #{image}")
+      begin
+        File.write(File.join(mnt, 'other.txt'), 'other')
+
+        # --one-file-systemなし: 境界をまたいでコピーし、警告を出す
+        FileUtils.mkdir(DST_DIR)
+        log = File.join(tmp, 'cross.log')
+        capture_io { run_qdumpfs(['--logpath', log, SRC_DIR, DST_DIR]) }
+        dst_today = File.join(DST_DIR, Time.now.strftime("%Y/%m/%d/src"))
+        assert File.exist?(File.join(dst_today, 'mnt', 'other.txt'))
+        assert_includes File.read(log), "warn: crossing filesystem boundary path=#{mnt}"
+
+        # --one-file-systemあり: マウントポイント配下はコピーしない
+        FileUtils.rm_rf(DST_DIR)
+        FileUtils.mkdir(DST_DIR)
+        log = File.join(tmp, 'skip.log')
+        capture_io { run_qdumpfs(['-x', '--logpath', log, SRC_DIR, DST_DIR]) }
+        refute File.exist?(File.join(dst_today, 'mnt'))
+        assert_includes File.read(log), "skip other filesystem path=#{mnt}"
+      ensure
+        system("hdiutil detach -quiet #{mnt}")
+      end
+    end
+
+    # 同じファイルシステム上のファイルはコピーされる
+    FileUtils.rmdir(mnt)
+    dst_today = File.join(DST_DIR, Time.now.strftime("%Y/%m/%d/src"))
+    result = `diff -r #{SRC_DIR} #{dst_today}`
+    assert_equal("", result)
+  end
+
   private
 
   def qdumpfs_backup_args(from, to)
